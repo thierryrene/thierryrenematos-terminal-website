@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>thierryrenematos.tec.br — Terminal</title>
+  <meta name="description" content="Terminal portfolio de Thierry René Matos — Desenvolvedor Front-end Sênior & Engenheiro de Performance" />
+
+  <!-- Tailwind CSS JIT via CDN -->
+  <script>
+    tailwind = {
+      config: {
+        theme: {
+          extend: {
+            fontFamily: {
+              mono: ['"JetBrains Mono"', '"Fira Code"', '"Cascadia Code"', 'Consolas', 'monospace'],
+            },
+            colors: {
+              term: {
+                bg:      'var(--term-bg)',
+                surface: 'var(--term-surface)',
+                border:  'var(--term-border)',
+                fg:      'var(--term-fg)',
+                comment: 'var(--term-comment)',
+                green:   'var(--term-green)',
+                yellow:  'var(--term-yellow)',
+                blue:    'var(--term-blue)',
+                purple:  'var(--term-purple)',
+                cyan:    'var(--term-cyan)',
+                red:     'var(--term-red)',
+                orange:  'var(--term-orange)',
+                pink:    'var(--term-pink)',
+              },
+            },
+          },
+        },
+      },
+    };
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ── Theme Custom Properties ── */
+    :root {
+      /* Dracula (default) */
+      --term-bg:      #282a36;
+      --term-surface: #21222c;
+      --term-border:  #44475a;
+      --term-fg:      #f8f8f2;
+      --term-comment: #6272a4;
+      --term-green:   #50fa7b;
+      --term-yellow:  #f1fa8c;
+      --term-blue:    #8be9fd;
+      --term-purple:  #bd93f9;
+      --term-cyan:    #8be9fd;
+      --term-red:     #ff5555;
+      --term-orange:  #ffb86c;
+      --term-pink:    #ff79c6;
+    }
+
+    /* ── Base reset ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: var(--term-bg);
+      color: var(--term-fg);
+      font-family: "JetBrains Mono", "Fira Code", "Cascadia Code", Consolas, monospace;
+      overflow: hidden;
+    }
+
+    /* ── CRT Scanlines overlay ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      pointer-events: none;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0px,
+        transparent 2px,
+        rgba(0, 0, 0, 0.08) 2px,
+        rgba(0, 0, 0, 0.08) 4px
+      );
+    }
+
+    /* ── CRT Screen flicker ── */
+    @keyframes crt-flicker {
+      0%   { opacity: 1; }
+      92%  { opacity: 1; }
+      93%  { opacity: 0.94; }
+      94%  { opacity: 1; }
+      97%  { opacity: 0.96; }
+      100% { opacity: 1; }
+    }
+
+    /* ── Phosphor glow ── */
+    @keyframes phosphor-pulse {
+      0%, 100% { text-shadow: 0 0 4px var(--term-green), 0 0 8px rgba(80,250,123,0.3); }
+      50%       { text-shadow: 0 0 6px var(--term-green), 0 0 14px rgba(80,250,123,0.5); }
+    }
+
+    /* ── Cursor blink ── */
+    @keyframes cursor-blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0; }
+    }
+
+    /* ── Terminal window ── */
+    terminal-window {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+      background: var(--term-bg);
+      animation: crt-flicker 8s infinite;
+    }
+
+    /* ── Title bar ── */
+    .titlebar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: var(--term-surface);
+      border-bottom: 1px solid var(--term-border);
+      flex-shrink: 0;
+      user-select: none;
+    }
+
+    .titlebar-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .titlebar-title {
+      margin-left: 8px;
+      font-size: 0.75rem;
+      color: var(--term-comment);
+      flex: 1;
+      text-align: center;
+    }
+
+    /* ── Output area ── */
+    .output-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      scroll-behavior: smooth;
+    }
+
+    .output-area::-webkit-scrollbar { width: 6px; }
+    .output-area::-webkit-scrollbar-track { background: var(--term-surface); }
+    .output-area::-webkit-scrollbar-thumb { background: var(--term-border); border-radius: 3px; }
+
+    /* ── Output lines ── */
+    .output-line {
+      font-size: 0.875rem;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .output-line.glow {
+      animation: phosphor-pulse 3s ease-in-out infinite;
+    }
+
+    /* ── Color helpers ── */
+    .c-fg      { color: var(--term-fg); }
+    .c-green   { color: var(--term-green); }
+    .c-yellow  { color: var(--term-yellow); }
+    .c-blue    { color: var(--term-blue); }
+    .c-purple  { color: var(--term-purple); }
+    .c-cyan    { color: var(--term-cyan); }
+    .c-red     { color: var(--term-red); }
+    .c-orange  { color: var(--term-orange); }
+    .c-pink    { color: var(--term-pink); }
+    .c-comment { color: var(--term-comment); }
+    .c-bold    { font-weight: 700; }
+    .c-dim     { opacity: 0.6; }
+
+    /* ── Prompt area ── */
+    terminal-prompt {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      padding: 8px 16px 12px;
+      flex-shrink: 0;
+      border-top: 1px solid var(--term-border);
+      background: var(--term-bg);
+    }
+
+    .prompt-label {
+      white-space: nowrap;
+      font-size: 0.875rem;
+      flex-shrink: 0;
+    }
+
+    .prompt-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--term-fg);
+      font-family: inherit;
+      font-size: 0.875rem;
+      caret-color: var(--term-green);
+      padding: 0 4px;
+    }
+
+    .prompt-cursor {
+      display: inline-block;
+      width: 8px;
+      height: 1em;
+      background: var(--term-green);
+      vertical-align: text-bottom;
+      animation: cursor-blink 1s step-end infinite;
+      flex-shrink: 0;
+    }
+
+    /* ── Responsive: mobile adjustments ── */
+    @media (max-width: 640px) {
+      .output-area { padding: 10px; }
+      .output-line { font-size: 0.8rem; }
+      terminal-prompt { padding: 6px 10px 10px; }
+      .prompt-label, .prompt-input { font-size: 0.8rem; }
+    }
+
+    /* ── ASCII art container ── */
+    .ascii-art {
+      font-size: 0.65rem;
+      line-height: 1.1;
+      color: var(--term-purple);
+      text-shadow: 0 0 8px var(--term-purple);
+    }
+
+    @media (max-width: 640px) {
+      .ascii-art { font-size: 0.5rem; }
+    }
+
+    /* ── Separator ── */
+    .separator {
+      color: var(--term-border);
+    }
+
+    /* ── Link styling ── */
+    a.term-link {
+      color: var(--term-cyan);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    a.term-link:hover, a.term-link:focus {
+      color: var(--term-blue);
+      outline: 1px dashed var(--term-blue);
+      outline-offset: 2px;
+    }
+
+    /* ── Tag badges ── */
+    .tag {
+      display: inline-block;
+      padding: 0 6px;
+      border: 1px solid var(--term-border);
+      border-radius: 3px;
+      font-size: 0.7rem;
+      color: var(--term-comment);
+      margin: 1px 2px;
+    }
+
+    /* ── Autocomplete suggestions ── */
+    #autocomplete-list {
+      display: none;
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      background: var(--term-surface);
+      border: 1px solid var(--term-border);
+      border-radius: 4px;
+      padding: 4px 0;
+      z-index: 100;
+      min-width: 180px;
+    }
+
+    #autocomplete-list.visible { display: block; }
+
+    .autocomplete-item {
+      padding: 4px 12px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      color: var(--term-fg);
+    }
+    .autocomplete-item:hover,
+    .autocomplete-item.active {
+      background: var(--term-border);
+      color: var(--term-green);
+    }
+
+    /* ── Prompt wrapper for autocomplete positioning ── */
+    .prompt-inner {
+      position: relative;
+      flex: 1;
+      display: flex;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════
+     HTML TEMPLATES
+     ══════════════════════════════════════════════ -->
+
+<!-- Template: single output line -->
+<template id="tpl-line">
+  <div class="output-line" role="listitem"></div>
+</template>
+
+<!-- Template: blank spacer line -->
+<template id="tpl-blank">
+  <div class="output-line" role="listitem" aria-hidden="true">&nbsp;</div>
+</template>
+
+<!-- Template: separator line -->
+<template id="tpl-separator">
+  <div class="output-line separator" role="listitem" aria-hidden="true"></div>
+</template>
+
+<!-- Template: project card -->
+<template id="tpl-project">
+  <div class="output-line project-card" role="listitem">
+    <span class="project-name c-yellow c-bold"></span>
+    <span class="c-comment"> — </span>
+    <span class="project-desc c-fg"></span>
+    <br />
+    <span class="c-comment">   lang: </span><span class="project-lang c-cyan"></span>
+    <span class="c-comment">  link: </span><a class="project-link term-link" target="_blank" rel="noopener noreferrer"></a>
+    <br />
+    <span class="project-tags"></span>
+  </div>
+</template>
+
+<!-- Template: experience card -->
+<template id="tpl-experience">
+  <div class="output-line experience-card" role="listitem">
+    <span class="exp-role c-green c-bold"></span>
+    <span class="c-comment"> @ </span>
+    <span class="exp-company c-yellow"></span>
+    <span class="c-comment">  (</span><span class="exp-period c-orange"></span><span class="c-comment">)</span>
+    <br />
+    <span class="exp-desc c-dim" style="padding-left:1em;"></span>
+  </div>
+</template>
+
+<!-- Template: skill category -->
+<template id="tpl-skill-category">
+  <div class="output-line" role="listitem">
+    <span class="skill-cat c-purple c-bold"></span>
+    <span class="c-comment">:  </span>
+    <span class="skill-items c-fg"></span>
+  </div>
+</template>
+
+<!-- Template: contact row -->
+<template id="tpl-contact">
+  <div class="output-line" role="listitem">
+    <span class="contact-label c-pink c-bold"></span>
+    <span class="c-comment">:  </span>
+    <a class="contact-link term-link" target="_blank" rel="noopener noreferrer"></a>
+  </div>
+</template>
+
+<!-- Template: blog post -->
+<template id="tpl-blog">
+  <div class="output-line" role="listitem">
+    <span class="blog-date c-comment"></span>
+    <span class="c-comment">  </span>
+    <span class="blog-title c-cyan c-bold"></span>
+    <br />
+    <span class="blog-summary c-dim" style="padding-left:1em;"></span>
+    <br />
+    <span class="c-comment" style="padding-left:1em;">tags: </span><span class="blog-tags"></span>
+  </div>
+</template>
+
+<!-- Template: autocomplete item -->
+<template id="tpl-autocomplete-item">
+  <div class="autocomplete-item" tabindex="0" role="option"></div>
+</template>
+
+<!-- ══════════════════════════════════════════════
+     MAIN COMPONENT
+     ══════════════════════════════════════════════ -->
+
+<terminal-window role="main" aria-label="Terminal Portfolio de Thierry René Matos">
+
+  <!-- Title bar -->
+  <div class="titlebar" aria-hidden="true">
+    <span class="titlebar-dot" style="background:#ff5f57;"></span>
+    <span class="titlebar-dot" style="background:#ffbd2e;"></span>
+    <span class="titlebar-dot" style="background:#28c840;"></span>
+    <span class="titlebar-title">thierry@thierryrenematos.tec.br — zsh</span>
+  </div>
+
+  <!-- Output area: aria-live for screen readers -->
+  <div
+    id="output"
+    class="output-area"
+    role="list"
+    aria-live="polite"
+    aria-relevant="additions text"
+    aria-label="Saída do terminal"
+  ></div>
+
+  <!-- Prompt area -->
+  <terminal-prompt role="form" aria-label="Linha de comando">
+    <span class="prompt-label">
+      <span class="c-green c-bold">thierry</span><span class="c-comment">@</span><span class="c-blue">thierryrenematos.tec.br</span><span class="c-comment">:</span><span class="c-purple">~</span><span class="c-fg"> $ </span>
+    </span>
+    <div class="prompt-inner">
+      <div id="autocomplete-list" role="listbox" aria-label="Sugestões de comandos"></div>
+      <input
+        id="cmd-input"
+        class="prompt-input"
+        type="text"
+        autocomplete="off"
+        autocorrect="off"
+        autocapitalize="off"
+        spellcheck="false"
+        aria-label="Entrada de comando"
+        aria-autocomplete="list"
+        aria-controls="autocomplete-list"
+        aria-haspopup="listbox"
+        placeholder="Digite 'help' para ver os comandos disponíveis"
+      />
+    </div>
+    <span class="prompt-cursor" aria-hidden="true"></span>
+  </terminal-prompt>
+
+</terminal-window>
+
+<!-- ══════════════════════════════════════════════
+     JAVASCRIPT
+     ══════════════════════════════════════════════ -->
+<script>
+'use strict';
+
+/* ═══════════════════════════════════════════════════
+   1. DATA DICTIONARIES
+   ═══════════════════════════════════════════════════ */
+
+const profileData = {
+  name:     'Thierry René Matos',
+  handle:   'thierryrene',
+  title:    'Desenvolvedor Front-end Sênior & Engenheiro de Performance',
+  location: 'Brasil 🇧🇷',
+  bio:      'Apaixonado por criar experiências web de ultra-alta performance. Defensor da web semântica, acessibilidade e do poder do JavaScript nativo. Sempre explorando os limites do que é possível com as APIs da plataforma web.',
+  website:  'https://thierryrenematos.tec.br',
+  github:   'https://github.com/thierryrene',
+  status:   'Disponível para projetos freelance & posições remotas',
+};
+
+const contacts = [
+  { label: 'Email',    value: 'thierry@thierryrenematos.tec.br', link: 'mailto:thierry@thierryrenematos.tec.br' },
+  { label: 'GitHub',   value: 'github.com/thierryrene',          link: 'https://github.com/thierryrene' },
+  { label: 'LinkedIn', value: 'linkedin.com/in/thierryrene',     link: 'https://www.linkedin.com/in/thierryrene' },
+  { label: 'Twitter',  value: '@thierryrene',                    link: 'https://twitter.com/thierryrene' },
+  { label: 'Website',  value: 'thierryrenematos.tec.br',         link: 'https://thierryrenematos.tec.br' },
+];
+
+const experiences = [
+  {
+    role:    'Engenheiro de Performance Front-end',
+    company: 'TechBrasil S.A.',
+    period:  '2022 — presente',
+    desc:    'Liderança técnica em otimização de Core Web Vitals. Reduziu LCP médio de 4.2s para 0.9s via code-splitting, lazy loading e Edge CDN. Responsável pela arquitetura de micro-frontends.',
+  },
+  {
+    role:    'Desenvolvedor Front-end Pleno',
+    company: 'StartupForte',
+    period:  '2020 — 2022',
+    desc:    'Construção de Design System com Web Components nativos. Implementação de PWA com Service Workers e offline-first strategy. Mentoria de desenvolvedores júnior.',
+  },
+  {
+    role:    'Desenvolvedor Front-end Júnior',
+    company: 'Agência Pixel',
+    period:  '2018 — 2020',
+    desc:    'Desenvolvimento de interfaces responsivas com HTML5, CSS3 e JavaScript ES6+. Integração com APIs REST e GraphQL. Otimização de imagens e assets.',
+  },
+];
+
+const projects = [
+  {
+    name:  'VanillaState',
+    desc:  'Micro-biblioteca de gerenciamento de estado reativo usando apenas Proxy API nativa. Zero dependências, 1.2KB gzip.',
+    lang:  'JavaScript',
+    link:  'https://github.com/thierryrene/vanilla-state',
+    tags:  ['proxy', 'reactive', 'state-management', 'zero-deps'],
+    stars: 342,
+  },
+  {
+    name:  'CriticalCSS-CLI',
+    desc:  'Ferramenta CLI para extração automática de CSS crítico e inlining no HTML. Melhora LCP em até 60%.',
+    lang:  'Node.js',
+    link:  'https://github.com/thierryrene/criticalcss-cli',
+    tags:  ['css', 'performance', 'cli', 'lcp'],
+    stars: 189,
+  },
+  {
+    name:  'WebComponents-Kit',
+    desc:  'Kit de componentes de UI reutilizáveis com Custom Elements, sem frameworks. Inclui temas e a11y completo.',
+    lang:  'JavaScript / CSS',
+    link:  'https://github.com/thierryrene/webcomponents-kit',
+    tags:  ['web-components', 'custom-elements', 'a11y', 'theming'],
+    stars: 521,
+  },
+  {
+    name:  'PerformanceObserver-Utils',
+    desc:  'Utilitários para coleta e análise de métricas de performance via PerformanceObserver API.',
+    lang:  'TypeScript',
+    link:  'https://github.com/thierryrene/perf-observer-utils',
+    tags:  ['performance', 'metrics', 'CWV', 'monitoring'],
+    stars: 97,
+  },
+  {
+    name:  'Terminal Portfolio',
+    desc:  'Este portfólio! Um terminal interativo implementado em um único arquivo HTML, sem frameworks.',
+    lang:  'HTML / CSS / JS',
+    link:  'https://github.com/thierryrene/thierryrenematos-terminal-website',
+    tags:  ['portfolio', 'terminal', 'vanilla-js', 'single-file'],
+    stars: 0,
+  },
+];
+
+const skills = {
+  'Core Web':    ['HTML5 Semântico', 'CSS3 Avançado', 'JavaScript ES2022+', 'Web APIs Nativas'],
+  'Performance': ['Core Web Vitals', 'Lighthouse', 'WebPageTest', 'PerformanceObserver', 'Resource Hints'],
+  'Arquitetura': ['Web Components', 'Custom Elements', 'Proxy API', 'Service Workers', 'PWA'],
+  'Tooling':     ['Vite', 'Webpack', 'esbuild', 'PostCSS', 'Rollup'],
+  'Back-end':    ['Node.js', 'Express', 'Fastify', 'REST', 'GraphQL'],
+  'Databases':   ['PostgreSQL', 'SQLite', 'Redis', 'IndexedDB'],
+  'DevOps':      ['Docker', 'GitHub Actions', 'Vercel', 'Cloudflare Workers', 'nginx'],
+  'Design':      ['Figma', 'Design Systems', 'Tailwind CSS', 'CSS-in-JS', 'Animações CSS'],
+};
+
+const blogPosts = [
+  {
+    date:    '2025-03-15',
+    title:   'Proxy API: O Gerenciamento de Estado que Você Já Tinha',
+    summary: 'Como substituir Redux, Zustand e MobX com 30 linhas de JavaScript nativo usando a Proxy API.',
+    tags:    ['javascript', 'proxy', 'state-management', 'performance'],
+    link:    'https://thierryrenematos.tec.br/blog/proxy-api-state',
+  },
+  {
+    date:    '2025-02-03',
+    title:   'LCP < 1s: O Guia Definitivo de Core Web Vitals em 2025',
+    summary: 'Técnicas avançadas para dominar o Largest Contentful Paint: preload, fetchpriority e Edge rendering.',
+    tags:    ['cwv', 'lcp', 'performance', 'seo'],
+    link:    'https://thierryrenematos.tec.br/blog/lcp-abaixo-de-1s',
+  },
+  {
+    date:    '2025-01-10',
+    title:   'Web Components em 2025: Maduros o Suficiente?',
+    summary: 'Uma análise honesta do ecossistema de Custom Elements, Declarative Shadow DOM e Form-Associated Elements.',
+    tags:    ['web-components', 'custom-elements', 'html'],
+    link:    'https://thierryrenematos.tec.br/blog/web-components-2025',
+  },
+  {
+    date:    '2024-11-20',
+    title:   'Single-File Apps: A Arte de Fazer Mais com Menos',
+    summary: 'Por que às vezes um único arquivo HTML é a arquitetura mais elegante e performática que você pode escolher.',
+    tags:    ['architecture', 'html', 'vanilla-js', 'simplicity'],
+    link:    'https://thierryrenematos.tec.br/blog/single-file-apps',
+  },
+];
+
+const themes = {
+  dracula: {
+    '--term-bg':      '#282a36',
+    '--term-surface': '#21222c',
+    '--term-border':  '#44475a',
+    '--term-fg':      '#f8f8f2',
+    '--term-comment': '#6272a4',
+    '--term-green':   '#50fa7b',
+    '--term-yellow':  '#f1fa8c',
+    '--term-blue':    '#8be9fd',
+    '--term-purple':  '#bd93f9',
+    '--term-cyan':    '#8be9fd',
+    '--term-red':     '#ff5555',
+    '--term-orange':  '#ffb86c',
+    '--term-pink':    '#ff79c6',
+  },
+  monokai: {
+    '--term-bg':      '#272822',
+    '--term-surface': '#1e1f1c',
+    '--term-border':  '#49483e',
+    '--term-fg':      '#f8f8f2',
+    '--term-comment': '#75715e',
+    '--term-green':   '#a6e22e',
+    '--term-yellow':  '#e6db74',
+    '--term-blue':    '#66d9e8',
+    '--term-purple':  '#ae81ff',
+    '--term-cyan':    '#66d9e8',
+    '--term-red':     '#f92672',
+    '--term-orange':  '#fd971f',
+    '--term-pink':    '#f92672',
+  },
+  nord: {
+    '--term-bg':      '#2e3440',
+    '--term-surface': '#272c36',
+    '--term-border':  '#3b4252',
+    '--term-fg':      '#eceff4',
+    '--term-comment': '#4c566a',
+    '--term-green':   '#a3be8c',
+    '--term-yellow':  '#ebcb8b',
+    '--term-blue':    '#81a1c1',
+    '--term-purple':  '#b48ead',
+    '--term-cyan':    '#88c0d0',
+    '--term-red':     '#bf616a',
+    '--term-orange':  '#d08770',
+    '--term-pink':    '#b48ead',
+  },
+  solarized: {
+    '--term-bg':      '#002b36',
+    '--term-surface': '#073642',
+    '--term-border':  '#586e75',
+    '--term-fg':      '#839496',
+    '--term-comment': '#657b83',
+    '--term-green':   '#859900',
+    '--term-yellow':  '#b58900',
+    '--term-blue':    '#268bd2',
+    '--term-purple':  '#6c71c4',
+    '--term-cyan':    '#2aa198',
+    '--term-red':     '#dc322f',
+    '--term-orange':  '#cb4b16',
+    '--term-pink':    '#d33682',
+  },
+  gruvbox: {
+    '--term-bg':      '#282828',
+    '--term-surface': '#1d2021',
+    '--term-border':  '#504945',
+    '--term-fg':      '#ebdbb2',
+    '--term-comment': '#928374',
+    '--term-green':   '#b8bb26',
+    '--term-yellow':  '#fabd2f',
+    '--term-blue':    '#83a598',
+    '--term-purple':  '#d3869b',
+    '--term-cyan':    '#8ec07c',
+    '--term-red':     '#fb4934',
+    '--term-orange':  '#fe8019',
+    '--term-pink':    '#d3869b',
+  },
+};
+
+/* ═══════════════════════════════════════════════════
+   2. STATE MACHINE (Proxy API)
+   ═══════════════════════════════════════════════════ */
+
+const _state = {
+  theme:       'dracula',
+  history:     [],
+  historyIdx:  -1,
+  inputBuffer: '',
+  booted:      false,
+  acSuggestions: [],
+  acActiveIdx: -1,
+};
+
+const state = new Proxy(_state, {
+  set(target, prop, value) {
+    const prev = target[prop];
+    target[prop] = value;
+    if (prev !== value) {
+      document.dispatchEvent(new CustomEvent('state:change', {
+        detail: { prop, value, prev },
+      }));
+    }
+    return true;
+  },
+});
+
+/* ═══════════════════════════════════════════════════
+   3. TEMPLATE HELPERS
+   ═══════════════════════════════════════════════════ */
+
+/**
+ * Clones a <template> by id and returns the DocumentFragment.
+ * @param {string} id
+ * @returns {DocumentFragment}
+ */
+function cloneTemplate(id) {
+  return document.getElementById(id).content.cloneNode(true);
+}
+
+/**
+ * Creates a single line element with given text and CSS classes.
+ * @param {string} text
+ * @param {...string} classes
+ * @returns {HTMLElement}
+ */
+function makeLine(text, ...classes) {
+  const frag = cloneTemplate('tpl-line');
+  const el = frag.querySelector('.output-line');
+  el.textContent = text;
+  if (classes.length) el.classList.add(...classes);
+  return frag;
+}
+
+/**
+ * Creates a line with mixed content via a builder function.
+ * @param {function(HTMLElement): void} builder
+ * @param {...string} classes
+ * @returns {DocumentFragment}
+ */
+function makeLineWith(builder, ...classes) {
+  const frag = cloneTemplate('tpl-line');
+  const el = frag.querySelector('.output-line');
+  if (classes.length) el.classList.add(...classes);
+  builder(el);
+  return frag;
+}
+
+function makeBlank() {
+  return cloneTemplate('tpl-blank');
+}
+
+function makeSeparator(char = '─', length = 60) {
+  const frag = cloneTemplate('tpl-separator');
+  frag.querySelector('.separator').textContent = char.repeat(length);
+  return frag;
+}
+
+/* ═══════════════════════════════════════════════════
+   4. OUTPUT ENGINE
+   ═══════════════════════════════════════════════════ */
+
+const output = document.getElementById('output');
+
+/**
+ * Appends one or more nodes/fragments to the output area and scrolls down.
+ * @param {...(Node|DocumentFragment)} nodes
+ */
+function print(...nodes) {
+  for (const node of nodes) {
+    output.appendChild(node);
+  }
+  output.scrollTop = output.scrollHeight;
+}
+
+/* ═══════════════════════════════════════════════════
+   5. COMMAND IMPLEMENTATIONS
+   ═══════════════════════════════════════════════════ */
+
+const COMMANDS = {
+
+  /* ── help ── */
+  help() {
+    const cmds = [
+      ['about',      'Informações sobre mim'],
+      ['projects',   'Meus projetos open-source'],
+      ['skills',     'Habilidades técnicas'],
+      ['experience', 'Histórico profissional'],
+      ['contact',    'Formas de contato'],
+      ['blog',       'Posts do blog'],
+      ['theme',      'Trocar tema (dracula|monokai|nord|solarized|gruvbox)'],
+      ['clear',      'Limpar o terminal'],
+      ['help',       'Exibir esta mensagem'],
+    ];
+
+    print(
+      makeBlank(),
+      makeLine('Comandos disponíveis:', 'c-yellow', 'c-bold'),
+      makeSeparator('─', 50),
+    );
+
+    for (const [cmd, desc] of cmds) {
+      print(makeLineWith(el => {
+        const nameEl = document.createElement('span');
+        nameEl.className = 'c-green c-bold';
+        nameEl.textContent = '  ' + cmd.padEnd(12);
+        const descEl = document.createElement('span');
+        descEl.className = 'c-fg';
+        descEl.textContent = '— ' + desc;
+        el.appendChild(nameEl);
+        el.appendChild(descEl);
+      }));
+    }
+
+    print(makeBlank());
+  },
+
+  /* ── about ── */
+  about() {
+    print(
+      makeBlank(),
+      makeLine(profileData.name, 'c-purple', 'c-bold'),
+      makeLine(profileData.title, 'c-cyan'),
+      makeSeparator('─', 50),
+      makeLineWith(el => {
+        const locEl = document.createElement('span');
+        locEl.className = 'c-comment';
+        locEl.textContent = '📍 ';
+        const valEl = document.createElement('span');
+        valEl.className = 'c-fg';
+        valEl.textContent = profileData.location;
+        el.appendChild(locEl);
+        el.appendChild(valEl);
+      }),
+      makeBlank(),
+      makeLine(profileData.bio, 'c-fg'),
+      makeBlank(),
+      makeLineWith(el => {
+        const labelEl = document.createElement('span');
+        labelEl.className = 'c-comment';
+        labelEl.textContent = 'status:  ';
+        const valEl = document.createElement('span');
+        valEl.className = 'c-green';
+        valEl.textContent = profileData.status;
+        el.appendChild(labelEl);
+        el.appendChild(valEl);
+      }),
+      makeLineWith(el => {
+        const labelEl = document.createElement('span');
+        labelEl.className = 'c-comment';
+        labelEl.textContent = 'website: ';
+        const linkEl = document.createElement('a');
+        linkEl.className = 'term-link';
+        linkEl.href = profileData.website;
+        linkEl.target = '_blank';
+        linkEl.rel = 'noopener noreferrer';
+        linkEl.textContent = profileData.website.replace('https://', '');
+        el.appendChild(labelEl);
+        el.appendChild(linkEl);
+      }),
+      makeLineWith(el => {
+        const labelEl = document.createElement('span');
+        labelEl.className = 'c-comment';
+        labelEl.textContent = 'github:  ';
+        const linkEl = document.createElement('a');
+        linkEl.className = 'term-link';
+        linkEl.href = profileData.github;
+        linkEl.target = '_blank';
+        linkEl.rel = 'noopener noreferrer';
+        linkEl.textContent = profileData.github.replace('https://', '');
+        el.appendChild(labelEl);
+        el.appendChild(linkEl);
+      }),
+      makeBlank(),
+      makeLine('💡 Digite "skills" para ver minhas habilidades técnicas.', 'c-comment'),
+      makeBlank(),
+    );
+  },
+
+  /* ── projects ── */
+  projects() {
+    print(
+      makeBlank(),
+      makeLine(`Projetos (${projects.length})`, 'c-yellow', 'c-bold'),
+      makeSeparator('─', 50),
+      makeBlank(),
+    );
+
+    for (const p of projects) {
+      const frag = cloneTemplate('tpl-project');
+      frag.querySelector('.project-name').textContent = p.name;
+      frag.querySelector('.project-desc').textContent = p.desc;
+      frag.querySelector('.project-lang').textContent = p.lang;
+      const linkEl = frag.querySelector('.project-link');
+      linkEl.href = p.link;
+      linkEl.textContent = p.link.replace('https://github.com/', 'github.com/');
+      const tagsEl = frag.querySelector('.project-tags');
+      for (const tag of p.tags) {
+        const span = document.createElement('span');
+        span.className = 'tag';
+        span.textContent = '#' + tag;
+        tagsEl.appendChild(span);
+      }
+      if (p.stars > 0) {
+        const stars = document.createElement('span');
+        stars.className = 'c-yellow';
+        stars.style.marginLeft = '8px';
+        stars.textContent = `⭐ ${p.stars}`;
+        tagsEl.appendChild(stars);
+      }
+      print(frag);
+      print(makeBlank());
+    }
+  },
+
+  /* ── skills ── */
+  skills() {
+    print(
+      makeBlank(),
+      makeLine('Habilidades Técnicas', 'c-yellow', 'c-bold'),
+      makeSeparator('─', 50),
+      makeBlank(),
+    );
+
+    for (const [cat, items] of Object.entries(skills)) {
+      const frag = cloneTemplate('tpl-skill-category');
+      frag.querySelector('.skill-cat').textContent = cat.padEnd(12);
+      frag.querySelector('.skill-items').textContent = items.join('  ·  ');
+      print(frag);
+    }
+    print(makeBlank());
+  },
+
+  /* ── experience ── */
+  experience() {
+    print(
+      makeBlank(),
+      makeLine('Experiência Profissional', 'c-yellow', 'c-bold'),
+      makeSeparator('─', 50),
+      makeBlank(),
+    );
+
+    for (const e of experiences) {
+      const frag = cloneTemplate('tpl-experience');
+      frag.querySelector('.exp-role').textContent = e.role;
+      frag.querySelector('.exp-company').textContent = e.company;
+      frag.querySelector('.exp-period').textContent = e.period;
+      frag.querySelector('.exp-desc').textContent = e.desc;
+      print(frag);
+      print(makeBlank());
+    }
+  },
+
+  /* ── contact ── */
+  contact() {
+    print(
+      makeBlank(),
+      makeLine('Contato', 'c-yellow', 'c-bold'),
+      makeSeparator('─', 50),
+      makeBlank(),
+    );
+
+    for (const c of contacts) {
+      const frag = cloneTemplate('tpl-contact');
+      frag.querySelector('.contact-label').textContent = c.label.padEnd(10);
+      const linkEl = frag.querySelector('.contact-link');
+      linkEl.href = c.link;
+      linkEl.textContent = c.value;
+      print(frag);
+    }
+    print(makeBlank());
+  },
+
+  /* ── blog ── */
+  blog() {
+    print(
+      makeBlank(),
+      makeLine(`Blog (${blogPosts.length} posts)`, 'c-yellow', 'c-bold'),
+      makeSeparator('─', 50),
+      makeBlank(),
+    );
+
+    for (const post of blogPosts) {
+      const frag = cloneTemplate('tpl-blog');
+      frag.querySelector('.blog-date').textContent = post.date;
+      frag.querySelector('.blog-title').textContent = post.title;
+      frag.querySelector('.blog-summary').textContent = post.summary;
+      const tagsEl = frag.querySelector('.blog-tags');
+      for (const tag of post.tags) {
+        const span = document.createElement('span');
+        span.className = 'tag';
+        span.textContent = '#' + tag;
+        tagsEl.appendChild(span);
+      }
+      print(frag);
+
+      // Read more link
+      print(makeLineWith(el => {
+        const spacer = document.createElement('span');
+        spacer.style.paddingLeft = '1em';
+        const linkEl = document.createElement('a');
+        linkEl.className = 'term-link c-comment';
+        linkEl.href = post.link;
+        linkEl.target = '_blank';
+        linkEl.rel = 'noopener noreferrer';
+        linkEl.textContent = '→ ' + post.link.replace('https://', '');
+        spacer.appendChild(linkEl);
+        el.appendChild(spacer);
+      }));
+      print(makeBlank());
+    }
+  },
+
+  /* ── theme ── */
+  theme(args) {
+    const name = (args[0] || '').toLowerCase();
+    const available = Object.keys(themes);
+
+    if (!name) {
+      print(
+        makeBlank(),
+        makeLine(`Tema atual: ${state.theme}`, 'c-cyan'),
+        makeLine(`Temas disponíveis: ${available.join(', ')}`, 'c-comment'),
+        makeLineWith(el => {
+          const ex = document.createElement('span');
+          ex.className = 'c-comment';
+          ex.textContent = 'Uso: ';
+          const cmd = document.createElement('span');
+          cmd.className = 'c-green';
+          cmd.textContent = 'theme <nome>';
+          el.appendChild(ex);
+          el.appendChild(cmd);
+        }),
+        makeBlank(),
+      );
+      return;
+    }
+
+    if (!themes[name]) {
+      print(
+        makeBlank(),
+        makeLine(`Tema "${name}" não encontrado.`, 'c-red'),
+        makeLine(`Temas disponíveis: ${available.join(', ')}`, 'c-comment'),
+        makeBlank(),
+      );
+      return;
+    }
+
+    state.theme = name;
+    applyTheme(name);
+    print(
+      makeBlank(),
+      makeLine(`✓ Tema alterado para "${name}"`, 'c-green'),
+      makeBlank(),
+    );
+  },
+
+  /* ── clear ── */
+  clear() {
+    output.innerHTML = '';
+    printBanner();
+  },
+};
+
+/* ═══════════════════════════════════════════════════
+   6. THEME ENGINE
+   ═══════════════════════════════════════════════════ */
+
+/**
+ * Applies a theme by updating CSS custom properties.
+ * @param {string} name
+ */
+function applyTheme(name) {
+  const t = themes[name];
+  if (!t) return;
+  const root = document.documentElement;
+  for (const [prop, val] of Object.entries(t)) {
+    root.style.setProperty(prop, val);
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   7. COMMAND PARSER & EXECUTOR
+   ═══════════════════════════════════════════════════ */
+
+/**
+ * Echoes the command the user typed back to the output.
+ * @param {string} raw
+ */
+function echoInput(raw) {
+  print(makeLineWith(el => {
+    const promptEl = document.createElement('span');
+    promptEl.className = 'c-comment';
+    promptEl.textContent = '$ ';
+    const cmdEl = document.createElement('span');
+    cmdEl.className = 'c-fg';
+    cmdEl.textContent = raw;
+    el.appendChild(promptEl);
+    el.appendChild(cmdEl);
+  }));
+}
+
+/**
+ * Parses and executes a command string.
+ * @param {string} raw
+ */
+function execute(raw) {
+  const trimmed = raw.trim();
+  if (!trimmed) return;
+
+  // Add to history
+  if (state.history[0] !== trimmed) {
+    state.history = [trimmed, ...state.history].slice(0, 100);
+  }
+  state.historyIdx = -1;
+
+  echoInput(trimmed);
+
+  const [cmd, ...args] = trimmed.toLowerCase().split(/\s+/);
+  const handler = COMMANDS[cmd];
+
+  if (handler) {
+    handler(args);
+  } else {
+    print(
+      makeBlank(),
+      makeLineWith(el => {
+        const errEl = document.createElement('span');
+        errEl.className = 'c-red';
+        errEl.textContent = `Comando não encontrado: "${cmd}"`;
+        el.appendChild(errEl);
+        const hintEl = document.createElement('span');
+        hintEl.className = 'c-comment';
+        hintEl.textContent = '  — Digite "help" para ver os comandos disponíveis.';
+        el.appendChild(hintEl);
+      }),
+      makeBlank(),
+    );
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   8. BOOT SEQUENCE & BANNER
+   ═══════════════════════════════════════════════════ */
+
+const ASCII_LOGO = `
+  ████████╗██╗  ██╗██╗███████╗██████╗ ██████╗ ██╗   ██╗
+  ╚══██╔══╝██║  ██║██║██╔════╝██╔══██╗██╔══██╗╚██╗ ██╔╝
+     ██║   ███████║██║█████╗  ██████╔╝██████╔╝ ╚████╔╝ 
+     ██║   ██╔══██║██║██╔══╝  ██╔══██╗██╔══██╗  ╚██╔╝  
+     ██║   ██║  ██║██║███████╗██║  ██║██║  ██║   ██║   
+     ╚═╝   ╚═╝  ╚═╝╚═╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝  
+`.trim();
+
+function printBanner() {
+  print(makeBlank());
+
+  // ASCII logo — one line at a time for phosphor effect
+  for (const line of ASCII_LOGO.split('\n')) {
+    print(makeLineWith(el => {
+      el.classList.add('ascii-art');
+      el.textContent = line;
+    }));
+  }
+
+  print(
+    makeBlank(),
+    makeLineWith(el => {
+      el.style.textAlign = 'center';
+      const nameEl = document.createElement('span');
+      nameEl.className = 'c-fg c-bold';
+      nameEl.textContent = profileData.name;
+      const sep = document.createElement('span');
+      sep.className = 'c-comment';
+      sep.textContent = '  —  ';
+      const titleEl = document.createElement('span');
+      titleEl.className = 'c-cyan';
+      titleEl.textContent = profileData.title;
+      el.appendChild(nameEl);
+      el.appendChild(sep);
+      el.appendChild(titleEl);
+    }),
+    makeSeparator('═', 65),
+    makeLineWith(el => {
+      const v = document.createElement('span');
+      v.className = 'c-comment';
+      v.textContent = 'OS: TerminalOS 2025  ·  Kernel: web-v3  ·  Shell: zsh  ·  Uptime: sempre online';
+      el.appendChild(v);
+    }),
+    makeLineWith(el => {
+      const hint = document.createElement('span');
+      hint.className = 'c-comment';
+      hint.textContent = '💡 Digite ';
+      const cmd = document.createElement('span');
+      cmd.className = 'c-green c-bold';
+      cmd.textContent = 'help';
+      const rest = document.createElement('span');
+      rest.className = 'c-comment';
+      rest.textContent = ' para ver os comandos disponíveis.';
+      el.appendChild(hint);
+      el.appendChild(cmd);
+      el.appendChild(rest);
+    }),
+    makeBlank(),
+  );
+}
+
+/* ═══════════════════════════════════════════════════
+   9. AUTOCOMPLETE ENGINE
+   ═══════════════════════════════════════════════════ */
+
+const acList = document.getElementById('autocomplete-list');
+const ALL_COMMANDS = Object.keys(COMMANDS);
+
+function updateAutocomplete(value) {
+  const query = value.trim().toLowerCase();
+  acList.innerHTML = '';
+
+  if (!query) {
+    state.acSuggestions = [];
+    state.acActiveIdx = -1;
+    acList.classList.remove('visible');
+    return;
+  }
+
+  const matches = ALL_COMMANDS.filter(c => c.startsWith(query) && c !== query);
+
+  if (!matches.length) {
+    state.acSuggestions = [];
+    state.acActiveIdx = -1;
+    acList.classList.remove('visible');
+    return;
+  }
+
+  state.acSuggestions = matches;
+  state.acActiveIdx = -1;
+
+  for (const match of matches) {
+    const frag = cloneTemplate('tpl-autocomplete-item');
+    const item = frag.querySelector('.autocomplete-item');
+    item.textContent = match;
+    item.dataset.cmd = match;
+    item.addEventListener('click', () => {
+      input.value = match;
+      acList.classList.remove('visible');
+      state.acSuggestions = [];
+      input.focus();
+    });
+    item.addEventListener('keydown', e => {
+      if (e.key === 'Enter') item.click();
+    });
+    acList.appendChild(item);
+  }
+
+  acList.classList.add('visible');
+}
+
+function setAcActive(idx) {
+  const items = acList.querySelectorAll('.autocomplete-item');
+  items.forEach(el => el.classList.remove('active'));
+  if (idx >= 0 && idx < items.length) {
+    items[idx].classList.add('active');
+    items[idx].setAttribute('aria-selected', 'true');
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   10. INPUT HANDLER
+   ═══════════════════════════════════════════════════ */
+
+const input = document.getElementById('cmd-input');
+
+input.addEventListener('input', () => {
+  updateAutocomplete(input.value);
+});
+
+input.addEventListener('keydown', e => {
+  const suggestions = state.acSuggestions;
+
+  switch (e.key) {
+    case 'Enter': {
+      e.preventDefault();
+      acList.classList.remove('visible');
+      state.acSuggestions = [];
+      const val = input.value;
+      input.value = '';
+      updateAutocomplete('');
+      execute(val);
+      break;
+    }
+
+    case 'Tab': {
+      e.preventDefault();
+      if (suggestions.length === 1) {
+        input.value = suggestions[0];
+        updateAutocomplete('');
+      } else if (suggestions.length > 1) {
+        let next = (state.acActiveIdx + 1) % suggestions.length;
+        state.acActiveIdx = next;
+        setAcActive(next);
+        input.value = suggestions[next];
+      }
+      break;
+    }
+
+    case 'ArrowUp': {
+      e.preventDefault();
+      // If autocomplete open, navigate it
+      if (acList.classList.contains('visible') && suggestions.length) {
+        let prev = state.acActiveIdx <= 0 ? suggestions.length - 1 : state.acActiveIdx - 1;
+        state.acActiveIdx = prev;
+        setAcActive(prev);
+        input.value = suggestions[prev];
+      } else {
+        // History navigation
+        const hist = state.history;
+        if (!hist.length) break;
+        if (state.historyIdx === -1) state.inputBuffer = input.value;
+        const next = Math.min(state.historyIdx + 1, hist.length - 1);
+        state.historyIdx = next;
+        input.value = hist[next];
+        // Move cursor to end
+        requestAnimationFrame(() => {
+          input.selectionStart = input.selectionEnd = input.value.length;
+        });
+      }
+      break;
+    }
+
+    case 'ArrowDown': {
+      e.preventDefault();
+      if (acList.classList.contains('visible') && suggestions.length) {
+        let next = (state.acActiveIdx + 1) % suggestions.length;
+        state.acActiveIdx = next;
+        setAcActive(next);
+        input.value = suggestions[next];
+      } else {
+        const hist = state.history;
+        if (state.historyIdx <= 0) {
+          state.historyIdx = -1;
+          input.value = state.inputBuffer;
+        } else {
+          const prev = state.historyIdx - 1;
+          state.historyIdx = prev;
+          input.value = hist[prev];
+        }
+      }
+      break;
+    }
+
+    case 'Escape': {
+      acList.classList.remove('visible');
+      state.acSuggestions = [];
+      state.acActiveIdx = -1;
+      break;
+    }
+
+    case 'l': {
+      if (e.ctrlKey) {
+        e.preventDefault();
+        COMMANDS.clear();
+      }
+      break;
+    }
+
+    case 'c': {
+      if (e.ctrlKey) {
+        e.preventDefault();
+        print(makeLineWith(el => {
+          el.textContent = '$ ' + input.value + '^C';
+          el.classList.add('c-comment');
+        }));
+        input.value = '';
+        updateAutocomplete('');
+        state.historyIdx = -1;
+      }
+      break;
+    }
+
+    case 'u': {
+      if (e.ctrlKey) {
+        e.preventDefault();
+        input.value = '';
+        updateAutocomplete('');
+      }
+      break;
+    }
+  }
+});
+
+/* ═══════════════════════════════════════════════════
+   11. FOCUS MANAGEMENT
+   ═══════════════════════════════════════════════════ */
+
+// Re-focus input when clicking anywhere on the terminal window
+document.querySelector('terminal-window').addEventListener('click', e => {
+  if (e.target !== input && !e.target.closest('a') && !e.target.closest('.autocomplete-item')) {
+    input.focus();
+  }
+});
+
+// Close autocomplete when clicking outside
+document.addEventListener('click', e => {
+  if (!acList.contains(e.target) && e.target !== input) {
+    acList.classList.remove('visible');
+    state.acSuggestions = [];
+  }
+});
+
+/* ═══════════════════════════════════════════════════
+   12. CUSTOM ELEMENTS
+   ═══════════════════════════════════════════════════ */
+
+class TerminalWindow extends HTMLElement {
+  connectedCallback() {
+    // Light DOM: Tailwind and global CSS apply directly
+    this.setAttribute('tabindex', '-1');
+  }
+}
+
+class TerminalPrompt extends HTMLElement {
+  connectedCallback() {
+    // Delegate keyboard events via the global input handler
+  }
+}
+
+customElements.define('terminal-window', TerminalWindow);
+customElements.define('terminal-prompt', TerminalPrompt);
+
+/* ═══════════════════════════════════════════════════
+   13. STATE CHANGE LISTENER
+   ═══════════════════════════════════════════════════ */
+
+document.addEventListener('state:change', e => {
+  const { prop, value } = e.detail;
+  if (prop === 'theme') {
+    applyTheme(value);
+    document.querySelector('.titlebar-title').textContent =
+      `thierry@thierryrenematos.tec.br — zsh — tema: ${value}`;
+  }
+});
+
+/* ═══════════════════════════════════════════════════
+   14. BOOT
+   ═══════════════════════════════════════════════════ */
+
+function boot() {
+  applyTheme(state.theme);
+  printBanner();
+
+  // Delay first prompt to simulate terminal boot feel
+  setTimeout(() => {
+    input.focus();
+    state.booted = true;
+  }, 150);
+}
+
+// DOMContentLoaded is already fired (script is deferred by position), boot now
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', boot);
+} else {
+  boot();
+}
+</script>
+</body>
+</html>
