@@ -1,0 +1,6 @@
+- criar seção about/sobre
+- criar primeiro post real no blog
+- como o site não tem paginação, o registros de views no analytics devem ser feitos de acordo com os comandos executados. faça as adaptações necessárias para que os comandos disparem os pageviews necessários. as urls também devem mudar de acordo com a interação no prompt.
+- aplicar o padrão de desenvolvimento SDD no projeto
+- ajustar o bloco colors nas informações do terminal. esse item está totalemnte perdido no contexto do website.
+- no mobile, apresentar apenas $ no input do terminal. no desktop pode ficar o texto atual.
