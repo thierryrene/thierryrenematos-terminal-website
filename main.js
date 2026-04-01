@@ -1,10 +1,6 @@
-/** 
- * @typedef {Object} Profile
- * @property {string} name - Full Name
- * @property {string} role - Professional Role
- * @property {string} host - Infrastructure info
- * @property {string} stack - Tech stack list
- */
+/* =========================================
+ * 1. DATA DICTIONARIES (Mock Data Schema)
+ * ========================================= */
 const profileData = {
     name: 'Thierry Rene Matos',
     user: 'thierry',
@@ -16,18 +12,6 @@ const profileData = {
     workInstagram: 'https://instagram.com/stealthelook',
     workUrl: 'https://stealthelook.com.br',
     stack: 'PHP, JavaScript, React.js, Laravel, Vue.js, AWS, GA4'
-};
-
-/** @type {Object} Biography data for the SDD pattern */
-const aboutData = {
-    title: 'Sobre Thierry Rene Matos',
-    content: `Sou um desenvolvedor Full-Stack com mais de 15 anos de experiência, especializado em arquiteturas de alta performance e ecossistemas PHP moderno. Atualmente lidero a frente de tecnologia no Steal The Look, onde gerencio infraestrutura AWS e otimizações críticas de performance. Minha paixão reside em transformar desafios complexos em interfaces fluidas e sistemas escaláveis.`,
-    curiosities: [
-        'Entusiasta de Terminais e Automação',
-        'Fã de Minimalismo Digital',
-        'Mestre em Debugging sob pressão',
-        'Adepto de Vanilla JS quando a performance é lei'
-    ]
 };
 
 const contacts = [
@@ -256,7 +240,7 @@ function executeCommandVisual(cmdStr) {
 }
 
 // Quick Actions Builder
-const availableCommands = ['help', 'about', 'neofetch', 'ls', 'projects', 'experience', 'skills', 'blog', 'contact', 'theme', 'shortcuts', 'clear'];
+const availableCommands = ['help', 'neofetch', 'ls', 'projects', 'experience', 'skills', 'blog', 'contact', 'theme', 'shortcuts', 'clear'];
 const actionsBar = document.getElementById('quick-actions');
 
 availableCommands.forEach(cmd => {
@@ -477,7 +461,6 @@ const commandsStrategy = {
         const container = tpl.querySelector('div');
         const map = [
             {c: 'help', e: '🛟', d: 'Lista todos os comandos'},
-            {c: 'about', e: '👤', d: 'Sobre mim / Biografia'},
             {c: 'neofetch', e: '🐧', d: 'Informações do sistema/perfil'},
             {c: 'ls', e: '📂', d: 'Lista o diretório atual'},
             {c: 'projects', e: '💻', d: 'Portfólio open-source'},
@@ -498,15 +481,6 @@ const commandsStrategy = {
         });
         outputElem.appendChild(tpl);
     },
-    'about': () => {
-        const d = aboutData;
-        writeLine(d.title, 'text-term-cyan font-bold text-lg mt-4 mb-2');
-        writeLine(d.content, 'text-term-fg opacity-80 leading-relaxed mb-4');
-        writeLine('Curiosidades:', 'text-term-yellow font-bold mb-2');
-        d.curiosities.forEach(c => writeLine(`> ${c}`, 'text-term-fg opacity-70 ml-2'));
-        writeLine('<br>');
-    },
-    'sobre': () => commandsStrategy.about(),
     'shortcuts': () => {
         writeLine('Atalhos de Teclado Disponíveis:', 'text-term-yellow font-bold mt-4 mb-2');
         
