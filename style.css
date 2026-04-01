@@ -1,0 +1,42 @@
+/* 1. Theme Variables Mapping */
+:root {
+  /* Dracula Dark (Default) */
+  --term-bg: #282a36;
+  --term-fg: #f8f8f2;
+  --term-green: #50fa7b;
+  --term-blue: #8be9fd;
+  --term-purple: #bd93f9;
+  --term-yellow: #f1fa8c;
+}
+
+/* 2. Global Resets & Body */
+body {
+  background: #0f172a; /* Outer dark area mirroring macOS desktop dark mode */
+  font-family: 'Inter', sans-serif;
+  margin: 0;
+}
+.term-font {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+}
+
+/* 3. macOS Window Surface & Shadow */
+.mac-window {
+  box-shadow: 0 30px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.1);
+}
+
+/* 4. Text Phosphor Glow */
+.glow { text-shadow: 0 0 2px var(--term-fg); }
+
+/* 5. Custom Scrollbar constraints */
+terminal-output::-webkit-scrollbar { width: 6px; }
+terminal-output::-webkit-scrollbar-track { background: transparent; }
+terminal-output::-webkit-scrollbar-thumb { background: var(--term-purple); border-radius: 3px; }
+
+/* 6. Animations */
+.slide-in { animation: slideIn 0.25s ease-out forwards; }
+@keyframes slideIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Transitions for themes */
+terminal-window {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
