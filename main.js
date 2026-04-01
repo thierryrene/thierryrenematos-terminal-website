@@ -1,16 +1,33 @@
-/* =========================================
- * 1. DATA DICTIONARIES (Mock Data Schema)
- * ========================================= */
+/** 
+ * @typedef {Object} Profile
+ * @property {string} name - Full Name
+ * @property {string} role - Professional Role
+ * @property {string} host - Infrastructure info
+ * @property {string} stack - Tech stack list
+ */
 const profileData = {
     name: 'Thierry Rene Matos',
     user: 'thierry',
     hostname: 'ubuntu-server',
     os: 'Ubuntu 24.04 LTS / Linux',
-    host: 'VPS Coolify (FrankenPHP/Octane)',
-    role: 'Senior Web Dev — Cloud Services & Front/Back End',
+    host: 'VPS on Digital Ocean / Coolify',
+    role: 'Senior Web Dev — PHP / Python / JS',
     work: '@stealthelook',
+    workInstagram: 'https://instagram.com/stealthelook',
     workUrl: 'https://stealthelook.com.br',
     stack: 'PHP, JavaScript, React.js, Laravel, Vue.js, AWS, GA4'
+};
+
+/** @type {Object} Biography data for the SDD pattern */
+const aboutData = {
+    title: 'Sobre Thierry Rene Matos',
+    content: `Sou um desenvolvedor Full-Stack com mais de 15 anos de experiência, especializado em arquiteturas de alta performance e ecossistemas PHP moderno. Atualmente lidero a frente de tecnologia no Steal The Look, onde gerencio infraestrutura AWS e otimizações críticas de performance. Minha paixão reside em transformar desafios complexos em interfaces fluidas e sistemas escaláveis.`,
+    curiosities: [
+        'Entusiasta de Terminais e Automação',
+        'Fã de Minimalismo Digital',
+        'Mestre em Debugging sob pressão',
+        'Adepto de Vanilla JS quando a performance é lei'
+    ]
 };
 
 const contacts = [
@@ -144,10 +161,10 @@ const blogPosts = [
  * 2. THEMES CONFIGURATION
  * ========================================= */
 const themesConfig = {
-  'dracula': { bg: '#282a36', fg: '#f8f8f2', green: '#50fa7b', blue: '#8be9fd', purple: '#bd93f9', yellow: '#f1fa8c' },
-  'dracula-light': { bg: '#f8f8f2', fg: '#282a36', green: '#1a9a3b', blue: '#067ea2', purple: '#6b3fa0', yellow: '#b89209' },
-  'monokai': { bg: '#272822', fg: '#f8f8f2', green: '#a6e22e', blue: '#66d9ef', purple: '#ae81ff', yellow: '#e6db74' },
-  'monokai-light': { bg: '#fafafa', fg: '#272822', green: '#7db90b', blue: '#0594ab', purple: '#8e4aff', yellow: '#d2b610' }
+  'dracula':       { bg: '#282a36', fg: '#f8f8f2', green: '#50fa7b', blue: '#8be9fd', purple: '#bd93f9', yellow: '#f1fa8c',   header: '#1e2030', border: 'rgba(255,255,255,0.07)' },
+  'dracula-light': { bg: '#f8f8f2', fg: '#282a36', green: '#1a9a3b', blue: '#067ea2', purple: '#6b3fa0', yellow: '#b89209',   header: '#e2e8f0', border: 'rgba(0,0,0,0.10)' },
+  'monokai':       { bg: '#272822', fg: '#f8f8f2', green: '#a6e22e', blue: '#66d9ef', purple: '#ae81ff', yellow: '#e6db74',   header: '#1c1c18', border: 'rgba(255,255,255,0.07)' },
+  'monokai-light': { bg: '#fafafa', fg: '#272822', green: '#7db90b', blue: '#0594ab', purple: '#8e4aff', yellow: '#d2b610',   header: '#e8e8e4', border: 'rgba(0,0,0,0.10)' }
 };
 
 /* =========================================
@@ -177,9 +194,27 @@ window.addEventListener('themeChanged', (e) => {
     const themeVals = themesConfig[e.detail];
     if(!themeVals) return;
     const root = document.querySelector('terminal-window');
+    const macWin = document.querySelector('.mac-window');
+    const winHeader = document.querySelector('.win-header');
+    const quickActions = document.querySelector('quick-actions');
+
     for (const [key, val] of Object.entries(themeVals)) {
         root.style.setProperty(`--term-${key}`, val);
     }
+    
+    // Propaga header e border para toda a janela
+    if (macWin) macWin.style.setProperty('--term-header', themeVals.header);
+    if (winHeader) {
+        winHeader.style.backgroundColor = themeVals.header;
+        winHeader.style.borderBottomColor = themeVals.border;
+    }
+    if (quickActions) {
+        quickActions.style.backgroundColor = themeVals.header;
+        quickActions.style.borderTopColor = themeVals.border;
+    }
+    
+    // Adapta o wrapper .mac-window bg para combinar com o tema
+    if (macWin) macWin.style.backgroundColor = themeVals.bg;
 });
 
 // Initialize Theme immediately to prevent FOUC
@@ -221,7 +256,7 @@ function executeCommandVisual(cmdStr) {
 }
 
 // Quick Actions Builder
-const availableCommands = ['help', 'neofetch', 'ls', 'projects', 'skills', 'experience', 'contact', 'blog', 'clear'];
+const availableCommands = ['help', 'about', 'neofetch', 'ls', 'projects', 'experience', 'skills', 'blog', 'contact', 'theme', 'shortcuts', 'clear'];
 const actionsBar = document.getElementById('quick-actions');
 
 availableCommands.forEach(cmd => {
@@ -232,6 +267,32 @@ availableCommands.forEach(cmd => {
     btn.onclick = () => { executeCommandVisual(cmd); };
     actionsBar.appendChild(btn);
 });
+
+// Analytics: Track command execution as a pageview
+function trackCommand(cmd) {
+    if (typeof gtag !== 'function') return;
+    const cleanCmd = cmd.trim().split(' ')[0].toLowerCase();
+    
+    // Ignore meta-commands like clear or invalid ones
+    const ignored = ['clear', 'sudo', 'ls', 'exit'];
+    if (ignored.includes(cleanCmd)) return;
+
+    gtag('event', 'screen_view', {
+        app_name: 'TerminalPortfolio',
+        screen_name: cleanCmd,
+        page_location: window.location.href,
+        page_path: '/#' + cleanCmd,
+        page_title: `Terminal - ${cleanCmd.charAt(0).toUpperCase() + cleanCmd.slice(1)}`
+    });
+}
+
+// Deep Linking: Execute command from URL hash
+function handleDeepLink() {
+    const hash = window.location.hash.replace('#', '').trim();
+    if (hash && availableCommands.includes(hash)) {
+        setTimeout(() => { executeCommandVisual(hash); }, 500);
+    }
+}
 
 // Write simple line
 function writeLine(html, cssClass = '') {
@@ -275,6 +336,55 @@ inputElem.addEventListener('input', () => {
 
 // History and Keys
 inputElem.addEventListener('keydown', (e) => {
+    // Blog Interactive Mode
+    if (state.blogInteractive) {
+        if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (state.blogIndex > 0) { state.blogIndex--; state.updateBlogList(); }
+            return;
+        } else if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            if (state.blogIndex < blogPosts.length - 1) { state.blogIndex++; state.updateBlogList(); }
+            return;
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            const postId = blogPosts[state.blogIndex].id;
+            state.blogInteractive = false;
+            executeCommandVisual(`read ${postId}`);
+            return;
+        } else if (e.key !== 'Shift' && e.key !== 'Control' && e.key !== 'Meta' && e.key !== 'Alt') {
+            state.blogInteractive = false; // abort interactive mode
+        }
+    }
+
+    // Linux Native Shortcuts
+    if (e.ctrlKey) {
+        const k = e.key.toLowerCase();
+        if (k === 'l') { // Clear screen
+            e.preventDefault();
+            executeCommandVisual('clear');
+            return;
+        } else if (k === 'c') { // Cancel line
+            e.preventDefault();
+            writeLine(`<span class="hidden sm:inline"><span class="text-term-green font-bold">thierry</span><span class="text-term-fg opacity-40">@</span><span class="text-term-blue">thierryrenematos.tec.br</span><span class="text-term-fg opacity-40">:</span><span class="text-term-purple font-bold">~</span></span><span class="text-term-fg text-term-green sm:text-term-fg font-bold sm:font-normal"> $</span> ${inputElem.value}^C`);
+            inputElem.value = '';
+            inputElem.dispatchEvent(new Event('input'));
+            return;
+        } else if (k === 'u') { // Clear line before cursor
+            e.preventDefault();
+            inputElem.value = '';
+            inputElem.dispatchEvent(new Event('input'));
+            return;
+        } else if (k === 'w') { // Delete previous word
+            e.preventDefault();
+            const words = inputElem.value.trimEnd().split(' ');
+            words.pop();
+            inputElem.value = words.join(' ') + (words.length > 0 ? ' ' : '');
+            inputElem.dispatchEvent(new Event('input'));
+            return;
+        }
+    }
+
     if (e.key === 'Tab') {
         e.preventDefault();
         if (ghostElem.textContent && ghostElem.textContent.length > inputElem.value.length) {
@@ -286,7 +396,7 @@ inputElem.addEventListener('keydown', (e) => {
         inputElem.value = '';
         ghostElem.textContent = '';
         if (raw) {
-            writeLine(`<span class="text-term-green">thierry@ubuntu-server:~$</span> ${raw}`);
+            writeLine(`<span class="hidden sm:inline"><span class="text-term-green font-bold">thierry</span><span class="text-term-fg opacity-40">@</span><span class="text-term-blue">thierryrenematos.tec.br</span><span class="text-term-fg opacity-40">:</span><span class="text-term-purple font-bold">~</span></span><span class="text-term-fg text-term-green sm:text-term-fg font-bold sm:font-normal"> $</span> ${raw}`);
             state.history.push(raw);
             state.historyIndex = state.history.length;
             processCommand(raw);
@@ -314,12 +424,60 @@ inputElem.addEventListener('keydown', (e) => {
 /* =========================================
  * 5. COMMAND PROCESSORS MODULES
  * ========================================= */
+
+// DOM Text Node Scrambler (for safe text animation over HTML tags)
+function applyTextNodeAnimation(element, type) {
+    const walk = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+    const nodes = [];
+    let n;
+    while (n = walk.nextNode()) {
+        if (n.nodeValue.trim().length > 0) {
+            nodes.push({ node: n, original: n.nodeValue });
+            n.nodeValue = ' '; // hide initially
+        }
+    }
+
+    if (type === 'typewriter') {
+        let nIdx = 0;
+        let charIdx = 0;
+        const iv = setInterval(() => {
+            if (nIdx >= nodes.length) { clearInterval(iv); return; }
+            let cur = nodes[nIdx];
+            cur.node.nodeValue = cur.original.substring(0, charIdx + 1);
+            charIdx++;
+            if (charIdx > cur.original.length) { nIdx++; charIdx = 0; }
+        }, 5);
+    } else if (type === 'matrix') {
+        const chars = '01ABCDEFGHIJKLMNOPQRSTUVWXYZ@#$*';
+        let iter = 0;
+        const totalLen = nodes.reduce((a, c) => a + c.original.length, 0);
+
+        const iv = setInterval(() => {
+            let globalRevealed = 0;
+            nodes.forEach(item => {
+                let mapped = '';
+                for (let i = 0; i < item.original.length; i++) {
+                    const c = item.original[i];
+                    if (c === ' ' || c === '\n') { mapped += c; globalRevealed++; continue; }
+                    if (globalRevealed < iter) { mapped += c; globalRevealed++; continue; }
+                    mapped += chars[Math.floor(Math.random() * chars.length)];
+                    globalRevealed++;
+                }
+                item.node.nodeValue = mapped;
+            });
+            if (iter >= totalLen) clearInterval(iv);
+            iter += 3;
+        }, 20);
+    }
+}
+
 const commandsStrategy = {
     'help': () => {
         const tpl = document.getElementById('tpl-cmds').content.cloneNode(true);
         const container = tpl.querySelector('div');
         const map = [
             {c: 'help', e: '🛟', d: 'Lista todos os comandos'},
+            {c: 'about', e: '👤', d: 'Sobre mim / Biografia'},
             {c: 'neofetch', e: '🐧', d: 'Informações do sistema/perfil'},
             {c: 'ls', e: '📂', d: 'Lista o diretório atual'},
             {c: 'projects', e: '💻', d: 'Portfólio open-source'},
@@ -328,44 +486,158 @@ const commandsStrategy = {
             {c: 'blog', e: '📝', d: 'Artigos técnicos'},
             {c: 'contact', e: '📞', d: 'Minhas redes e conexões'},
             {c: 'theme', e: '🎨', d: 'Muda cor (dracula, monokai...)'},
+            {c: 'shortcuts', e: '⌨️', d: 'Teclas de atalho'},
             {c: 'clear', e: '🗑️', d: 'Limpo o console'}
         ];
         map.forEach(item => {
             const elDiv = document.createElement('div');
             elDiv.className = 'flex items-center gap-2 cursor-pointer hover:underline';
             elDiv.onclick = () => executeCommandVisual(item.c);
-            elDiv.innerHTML = `<span class="text-term-yellow w-24">${item.c}</span> <span>${item.e}</span> <span class="text-slate-300 text-sm">${item.d}</span>`;
+            elDiv.innerHTML = `<span class="text-term-yellow w-24">${item.c}</span> <span>${item.e}</span> <span class="text-term-fg opacity-70">${item.d}</span>`;
             container.appendChild(elDiv);
         });
         outputElem.appendChild(tpl);
+    },
+    'about': () => {
+        const d = aboutData;
+        writeLine(d.title, 'text-term-cyan font-bold text-lg mt-4 mb-2');
+        writeLine(d.content, 'text-term-fg opacity-80 leading-relaxed mb-4');
+        writeLine('Curiosidades:', 'text-term-yellow font-bold mb-2');
+        d.curiosities.forEach(c => writeLine(`> ${c}`, 'text-term-fg opacity-70 ml-2'));
+        writeLine('<br>');
+    },
+    'sobre': () => commandsStrategy.about(),
+    'shortcuts': () => {
+        writeLine('Atalhos de Teclado Disponíveis:', 'text-term-yellow font-bold mt-4 mb-2');
+        
+        const shortcutsMap = [
+            { k: 'ArrowUp', d: 'Carrega o comando anterior do histórico' },
+            { k: 'ArrowDown', d: 'Avança no histórico de comandos' },
+            { k: 'Tab', d: 'Autocompleta o comando sugerido' },
+            { k: 'Ctrl + L', d: 'Limpa a tela do terminal (clear)' },
+            { k: 'Ctrl + C', d: 'Cancela a digitação atual e pula linha' },
+            { k: 'Ctrl + U', d: 'Apaga toda a linha digitada' },
+            { k: 'Ctrl + W', d: 'Apaga a última palavra digitada' }
+        ];
+
+        shortcutsMap.forEach(s => {
+            writeLine(`<span class="text-term-purple font-bold inline-block w-28 text-right pr-4">${s.k}</span> <span class="text-term-fg opacity-70">→ ${s.d}</span>`);
+        });
+        writeLine('<br>');
     },
     'clear': () => {
         outputElem.innerHTML = '';
     },
     'neofetch': () => {
         const tpl = document.getElementById('tpl-neofetch').content.cloneNode(true);
-        const art = `
-   .---.
-  /     \\
-  \\.@-@./
-  /\\\`_'/\\
- // | | \\\\
-|/  |_|  \\|
-''  | |  ''
-    |_|`;
-        tpl.querySelector('.logo-art').textContent = art;
+        const art = String.raw`
+  _   _     _                      
+ | |_| |__ (_) ___ _ __ _ __ _   _ 
+ | __| '_ \| |/ _ \ '__| '__| | | |
+ | |_| | | | |  __/ |  | |  | |_| |
+  \__|_| |_|_|\___|_|  |_|   \__, |
+                             |___/ `;
+        const logoEl = tpl.querySelector('.logo-art');
+        
+        // Efeito Fixo: Matrix
+        const chosen = 'matrix';
+
+        if (chosen === 'typewriter') {
+            logoEl.textContent = '';
+            logoEl.classList.add('anim-pulse');
+            let i = 0;
+            const iv = setInterval(() => {
+                if(i < art.length) { logoEl.textContent += art.charAt(i); i++; }
+                else clearInterval(iv);
+            }, 2); // typing speed
+        } else if (chosen === 'matrix') {
+            logoEl.textContent = art;
+            logoEl.classList.add('anim-pulse');
+            const chars = '01ABCDEFGHIJKLMNOPQRSTUVWXYZ@#$*';
+            let iter = 0;
+            const iv = setInterval(() => {
+                logoEl.textContent = art.split('').map((c, i) => {
+                    if (c === ' ' || c === '\n') return c;
+                    if (i < iter) return c;
+                    return chars[Math.floor(Math.random() * chars.length)];
+                }).join('');
+                if (iter >= art.length) clearInterval(iv);
+                iter += 4;
+            }, 20); // matrix decode speed
+        } else {
+            logoEl.textContent = art;
+            logoEl.classList.add(`anim-${chosen}`);
+        }
         const hd = tpl.querySelector('.host-data');
         const d = profileData;
         const addRow = (k, v, isLink) => {
-            const vk = document.createElement('div'); vk.className = 'text-term-purple font-bold text-right'; vk.textContent = k;
-            const vv = document.createElement('div'); vv.className = 'text-slate-300';
+            const vk = document.createElement('div'); vk.className = 'text-term-purple font-bold text-right pt-[2px]'; vk.textContent = k;
+            const vv = document.createElement('div'); vv.className = 'text-term-fg opacity-80';
             if(isLink) vv.innerHTML = `<a href="${v}" target="_blank" class="hover:underline text-term-blue">${v}</a>`;
-            else vv.textContent = v;
+            else vv.innerHTML = v;
             hd.appendChild(vk); hd.appendChild(vv);
         };
-        addRow('OS', d.os); addRow('Host', d.host); addRow('User', d.user);
-        addRow('Role', d.role); addRow('Work', d.work); addRow('URL', d.workUrl, true);
-        addRow('Stack', d.stack);
+        
+        addRow('OS', d.os); 
+        addRow('Host', d.host); 
+        
+        // Formata "User"
+        const userHTML = `<span class="text-term-green font-bold">thierry</span>@ubuntu`;
+        addRow('User', userHTML);
+        
+        // Work: @instagram | website.com.br — em linha única com dois links
+        const workHTML = `<a href="${d.workInstagram}" target="_blank" class="hover:underline text-term-yellow font-bold">${d.work}</a><span class="text-term-fg opacity-30 mx-2">|</span><a href="${d.workUrl}" target="_blank" class="hover:underline text-term-blue">${d.workUrl.replace('https://', '')}</a>`;
+        addRow('Work', workHTML);
+        
+        // Mobile: Role completo. Desktop: título em destaque + sufixo.
+        const roleHighlight = `<span class="text-term-fg font-bold">Senior Web Dev</span>`;
+        const roleSuffix = d.role.replace('Senior Web Dev', '').trim(); // "— PHP / Python / JS"
+        
+        // Linha única mobile (só o título)
+        const combinedHTML = `<span class="sm:hidden">${roleHighlight}</span>`;
+        // Desktop: título + sufixo completo
+        const roleHTML = `${roleHighlight}<span class="hidden sm:inline"> ${roleSuffix}</span>`;
+        
+        addRow('Role', `${combinedHTML}<span class="hidden sm:inline">${roleHTML}</span>`);
+        
+
+        // Renderiza micro-tags (badges) — menores no mobile
+        const stackHTML = d.stack
+            .split(', ')
+            .map(tag => `<span class="bg-white/10 px-1 sm:px-1.5 py-0.5 rounded text-[10px] sm:text-xs text-term-blue mr-0.5 sm:mr-1 mt-0.5 sm:mt-1 inline-block border border-white/5 shadow-sm shadow-black/20">${tag}</span>`)
+            .join('');
+        addRow('Stack', stackHTML);
+
+        // Paleta de cores do tema ativo
+        const currentTheme = themesConfig[state.theme];
+        const paletteColors = [
+            { color: currentTheme.bg,     label: 'bg' },
+            { color: currentTheme.fg,     label: 'fg' },
+            { color: currentTheme.green,  label: 'green' },
+            { color: currentTheme.blue,   label: 'blue' },
+            { color: currentTheme.purple, label: 'purple' },
+            { color: currentTheme.yellow, label: 'yellow' },
+        ];
+        const paletteHTML = paletteColors.map(p =>
+            `<span data-palette-key="${p.label}" 
+                   title="Clique para alternar o tema (${p.label})" 
+                   style="background: var(--term-${p.label}); border: 1px solid rgba(255,255,255,0.15);" 
+                   class="inline-block w-5 h-5 rounded-sm mr-1 align-middle cursor-pointer hover:scale-110 active:scale-95 shadow-sm transition-all duration-200"
+                   onclick="const themes=Object.keys(themesConfig); const idx=(themes.indexOf(state.theme)+1)%themes.length; state.theme=themes[idx];"></span>`
+        ).join('');
+        
+        const paletteHeader = `<div class="text-[10px] uppercase opacity-40 mb-1">Active Theme Palette</div>`;
+        const paletteFooter = `<div class="text-[10px] opacity-20 italic mt-1 font-sans">Click on blocks to switch colors</div>`;
+        addRow('Colors', paletteHeader + paletteHTML + paletteFooter);
+
+        // Espelhando o efeito do bloco principal no painel secundário 
+        if (['typewriter', 'matrix'].includes(chosen)) {
+            hd.classList.add('anim-pulse'); // base light
+            applyTextNodeAnimation(hd, chosen);
+        } else {
+            hd.classList.add(`anim-${chosen}`);
+        }
+
         outputElem.appendChild(tpl);
     },
     'ls': () => {
@@ -393,10 +665,10 @@ const commandsStrategy = {
         experiences.forEach(e => {
             const item = document.createElement('div');
             item.className = 'border-l-2 border-term-purple pl-4 ml-2 space-y-2';
-            let html = `<div class="text-xl font-bold text-term-cyan">${e.role}</div>
-                        <div class="text-slate-400">@ ${e.company} | <span class="text-term-yellow">${e.period}</span></div>
-                        <p class="text-slate-300 text-sm">${e.description}</p>
-                        <ul class="text-slate-400 text-sm mt-2 space-y-1">`;
+            let html = `<div class="font-bold text-term-cyan">${e.role}</div>
+                        <div class="text-term-fg opacity-50 font-mono">${e.company} · ${e.period}</div>
+                        <p class="text-term-fg opacity-80 mt-1">${e.description}</p>
+                        <ul class="text-term-fg opacity-70 mt-2 space-y-1">`;
             e.achievements.forEach(a => { html += `<li>> ${a}</li>`; });
             html += `</ul>`;
             item.innerHTML = html;
@@ -410,11 +682,11 @@ const commandsStrategy = {
         projects.forEach(p => {
             const card = document.createElement('div');
             card.className = 'border border-white/10 p-4 rounded bg-white/5 flex flex-col justify-between';
-            let tagsHtml = p.tags.map(t => `<span class="rounded-full px-2 py-1 text-[10px] bg-white/10 text-slate-300">${t}</span>`).join('');
+            let tagsHtml = p.tags.map(t => `<span class="rounded-full px-2 py-1 text-[10px] bg-white/10 text-term-fg opacity-70">${t}</span>`).join('');
             card.innerHTML = `
                 <div>
-                    <a href="${p.link}" target="_blank" class="text-lg font-bold text-term-green hover:underline">${p.title}</a>
-                    <p class="text-slate-400 text-sm mt-2 mb-4 leading-relaxed">${p.description}</p>
+                    <a href="${p.link}" target="_blank" class="font-bold text-term-green hover:underline">${p.title}</a>
+                    <p class="text-term-fg opacity-70 mt-2 mb-4 leading-relaxed">${p.description}</p>
                 </div>
                 <div class="flex flex-wrap gap-1 mt-auto shrink-0">${tagsHtml}</div>
             `;
@@ -430,8 +702,8 @@ const commandsStrategy = {
             let h = `<div class="text-term-yellow font-bold mb-2 uppercase border-b border-white/10 pb-1 inline-block">${c.category}</div><div class="space-y-1">`;
             c.skills.forEach(s => {
                 const bar = '█'.repeat(s.level) + '░'.repeat(10 - s.level);
-                h += `<div class="flex justify-between max-w-sm text-sm">
-                        <span class="text-slate-300">${s.name}</span>
+                h += `<div class="flex justify-between max-w-sm">
+                        <span class="text-term-fg opacity-80">${s.name}</span>
                         <span class="text-term-blue font-mono">[${bar}] ${s.level}/10</span>
                       </div>`;
             });
@@ -446,20 +718,36 @@ const commandsStrategy = {
         const cont = tpl.querySelector('.blog-container');
         const dFormat = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'medium' });
         
-        blogPosts.forEach(p => {
-             const row = document.createElement('div');
-             const dateReal = new Date(p.date);
-             row.className = 'cursor-pointer hover:bg-white/5 transition-colors p-2 rounded flex items-center gap-4 border border-transparent hover:border-white/5';
-             row.innerHTML = `<span class="text-term-yellow w-8 shrink-0 font-bold">#${p.id}</span>
-                              <span class="text-term-comment text-xs shrink-0 w-24">${dFormat.format(dateReal)}</span>
-                              <span class="text-slate-200 text-sm truncate">${p.title}</span>`;
-             row.onclick = () => executeCommandVisual(`read ${p.id}`);
-             cont.appendChild(row);
-        });
-        const hint = document.createElement('div');
-        hint.className = 'text-term-comment text-xs italic mt-2 ml-2';
-        hint.textContent = "Dica: digite 'read <id>' ou clique num artigo para abrir.";
-        cont.appendChild(hint);
+        state.blogInteractive = true;
+        state.blogIndex = 0;
+
+        const renderList = () => {
+            cont.innerHTML = '';
+            blogPosts.forEach((p, idx) => {
+                 const row = document.createElement('div');
+                 const dateReal = new Date(p.date);
+                 const isSel = idx === state.blogIndex;
+                 
+                 row.className = `cursor-pointer transition-colors p-2 rounded flex items-center gap-4 border ${isSel ? 'bg-white/10 border-white/20 scale-[1.01]' : 'bg-transparent border-transparent hover:bg-white/5'} transform`;
+                 
+                 row.innerHTML = `<span class="${isSel ? 'text-term-green' : 'text-term-yellow'} w-8 shrink-0 font-bold">${isSel ? '▶' : '#'} ${p.id}</span>
+                                  <span class="text-term-comment text-xs shrink-0 w-24">${dFormat.format(dateReal)}</span>
+                                  <span class="${isSel ? 'text-term-green font-bold' : 'text-term-fg opacity-80'} truncate">${p.title}</span>`;
+                 
+                 row.onclick = () => {
+                     state.blogInteractive = false;
+                     executeCommandVisual(`read ${p.id}`);
+                 };
+                 cont.appendChild(row);
+            });
+            const hint = document.createElement('div');
+            hint.className = 'text-term-comment text-xs italic mt-2 ml-2 animate-pulse';
+            hint.textContent = "↓ Dica: Use as setas (CIMA/BAIXO) para navegar e ENTER para ler o post selecionado.";
+            cont.appendChild(hint);
+        };
+        
+        state.updateBlogList = renderList;
+        renderList();
         outputElem.appendChild(tpl);
     },
     'contact': () => {
@@ -467,7 +755,7 @@ const commandsStrategy = {
         const cont = tpl.querySelector('.contact-container');
         contacts.forEach(c => {
              cont.innerHTML += `<div class="text-right pr-2 text-term-cyan">${c.icon} ${c.platform}</div>`;
-             cont.innerHTML += `<div><a href="${c.link}" target="_blank" class="hover:underline text-slate-300 hover:text-term-green">${c.display}</a></div>`;
+             cont.innerHTML += `<div><a href="${c.link}" target="_blank" class="hover:underline text-term-fg opacity-80 hover:text-term-green hover:opacity-100">${c.display}</a></div>`;
         });
         outputElem.appendChild(tpl);
     },
@@ -491,7 +779,7 @@ const commandsStrategy = {
     },
     'theme': (args) => {
         if(!args || args.length === 0) {
-            writeLine(`Temas suportados: ${Object.keys(themesConfig).join(', ')}. Uso: theme <nome>`, 'text-slate-300');
+            writeLine(`Temas suportados: ${Object.keys(themesConfig).join(', ')}. Uso: theme <nome>`, 'text-term-fg opacity-70');
             return;
         }
         const t = args[0].toLowerCase();
@@ -513,11 +801,20 @@ function processCommand(raw) {
     const args = parts.slice(1);
 
     if(cmd.startsWith('sudo')) {
-        writeLine('[ERROR] thierry is not in the sudoers file. This incident will be reported to the sysadmin.', 'text-red-500 font-bold bg-red-900/40 px-2 py-1 inline-block mt-2');
+        writeLine('[ERROR] thierry is not in the sudoers file. This incident will be reported to the sysadmin.', 'text-term-red font-bold bg-term-red/10 px-2 py-1 inline-block mt-2 rounded');
         return;
     }
 
     if(commandsStrategy[cmd]) {
+        // Track analytics and update URL for meaningful content commands
+        const trackable = ['blog', 'projects', 'skills', 'experience', 'contact', 'help', 'neofetch', 'shortcuts', 'theme'];
+        if (trackable.includes(cmd)) {
+            if (window.location.hash !== `#${cmd}`) {
+                history.pushState(null, null, `#${cmd}`);
+            }
+            trackCommand(cmd);
+        }
+        
         commandsStrategy[cmd](args);
     } else {
         const suggestion = getClosestMatch(cmd, availableCommands);
@@ -542,24 +839,45 @@ window.addEventListener('click', abortBoot, {once:true});
 
 async function startBootSequence() {
     const lines = [
-        "Mounted /home/thierry/workspace...",
+        "Initializing BIOS Configuration... [ OK ]",
+        "Loading CPU Microcode Updates... [ OK ]",
+        "Mounted /home/thierry/workspace... [ OK ]",
         "Loading Kernel Modules... [ OK ]",
+        "Fetching Remote Containers (Docker)... [ OK ]",
         "Starting FrankenPHP/Octane Daemon... [ OK ]",
         "Initializing Tailwind JIT Engine... [ OK ]",
+        "Loading Matrix Weights & AI Subroutines... [ OK ]",
         "Reached target Graphical Interface... [ OK ]"
     ];
     
     for(let line of lines) {
         if(bootControl.canceled) break;
         const formatted = line.replace('[ OK ]', '<span class="text-term-green font-bold">[ OK ]</span>');
-        writeLine(formatted, 'text-slate-400 text-sm mb-1');
-        await sleep(50 + Math.random() * 300);
+        writeLine(formatted, 'text-term-fg opacity-50 text-xs sm:text-sm mb-1');
+        await sleep(30 + Math.random() * 120);
     }
 
-    if(!bootControl.canceled) await sleep(500);
+    if(!bootControl.canceled) {
+        let barElem = writeLine("", 'text-term-yellow text-xs sm:text-sm font-mono mt-2 mb-4 opacity-90');
+        const barLen = 25;
+        for(let i = 0; i <= 100; i += Math.floor(Math.random() * 10) + 2) {
+            if(bootControl.canceled) break;
+            if(i > 100) i = 100;
+            const filled = Math.floor((i / 100) * barLen);
+            const empty = barLen - filled;
+            const barHTML = '█'.repeat(filled) + '░'.repeat(empty);
+            barElem.innerHTML = `Booting Shell Environment... <span class="text-term-green">[${barHTML}]</span> ${i}%`;
+            await sleep(30 + Math.random() * 40);
+        }
+        await sleep(400);
+    }
+    
     commandsStrategy.clear();
     commandsStrategy.neofetch();
-    writeLine("<i>Ambiente pronto. Digite 'help' para iniciar.</i>", "text-slate-500 my-4");
+    writeLine("<i>Ambiente pronto. Digite 'help' para iniciar.</i>", "text-term-fg opacity-40 text-xs sm:text-sm my-4");
+    
+    // Suporte a Deep Linking (executa comando se houver hash na URL)
+    handleDeepLink();
     
     // Remove cancel listeners so real clicks work
     window.removeEventListener('keydown', abortBoot);

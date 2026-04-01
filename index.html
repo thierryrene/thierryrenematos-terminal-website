@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -24,72 +25,79 @@
     }
   </script>
   <link rel="stylesheet" href="style.css">
-  
+
   <!-- GA4 Placeholder -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
+    function gtag() { dataLayer.push(arguments); }
     gtag('js', new Date());
     gtag('config', 'G-XXXXXXXXXX');
   </script>
 </head>
-<body class="flex items-center justify-center min-h-screen p-0 sm:p-8 bg-gradient-to-br from-slate-900 to-black">
+
+<body class="flex items-center justify-center min-h-screen p-0 sm:p-8 bg-gradient-to-br from-slate-900 to-black relative">
+
+  <!-- Particles Background (Desktop Only) -->
+  <div id="particles-js" class="absolute inset-0 z-0 hidden sm:block"></div>
 
   <!-- macOS Style Window Wrapper -->
-  <div class="mac-window w-full h-[100dvh] sm:w-[75vw] sm:max-w-7xl sm:h-[85vh] flex flex-col bg-gray-900 rounded-none sm:rounded-xl overflow-hidden relative">
-    
+  <div
+    class="mac-window w-full h-[100dvh] sm:w-[75vw] sm:max-w-7xl sm:h-[85vh] flex flex-col bg-gray-900 rounded-none sm:rounded-xl overflow-hidden relative z-10 shadow-2xl">
+
     <!-- Window Header -->
-    <div class="h-10 bg-slate-800 flex items-center px-4 shrink-0 z-10 border-b border-white/5 relative">
+    <div class="win-header h-10 bg-slate-800 flex items-center px-4 shrink-0 z-10 border-b border-white/5 relative transition-colors duration-300">
       <div class="flex space-x-2 absolute left-4">
         <div class="w-3 h-3 rounded-full bg-red-500 border border-red-600"></div>
         <div class="w-3 h-3 rounded-full bg-yellow-500 border border-yellow-600"></div>
         <div class="w-3 h-3 rounded-full bg-green-500 border border-green-600"></div>
       </div>
-      <div class="flex-1 text-center font-mono text-xs text-slate-400">thierry@ubuntu-server:~</div>
+      <div class="flex-1 text-center font-mono text-xs text-term-fg opacity-40">thierry@thierryrenematos.tec.br — zsh</div>
     </div>
-    
+
     <!-- Terminal Root Component -->
-    <terminal-window class="flex-1 relative flex flex-col bg-term-bg text-term-fg term-font text-sm sm:text-base glow overflow-hidden">
-      
+    <terminal-window
+      class="flex-1 relative flex flex-col bg-term-bg text-term-fg term-font text-sm sm:text-base overflow-hidden">
+
       <!-- Output Container -->
-      <terminal-output id="output" class="flex-1 overflow-y-auto p-4 pb-2 scroll-smooth block" aria-live="polite" aria-relevant="additions text"></terminal-output>
-      
+      <terminal-output id="output" class="flex-1 overflow-y-auto p-4 pb-2 scroll-smooth block" aria-live="polite"
+        aria-relevant="additions text"></terminal-output>
+
       <!-- Prompt Component -->
-      <terminal-prompt class="px-4 pb-16 pt-2 flex items-center shrink-0 block">
-        <span class="prompt-user text-term-green whitespace-nowrap font-bold">thierry@ubuntu-server:~$ </span>
-        <div class="relative flex-1 ml-2 flex items-center">
-          <span id="ghost-text" class="absolute pointer-events-none opacity-50 text-gray-500 whitespace-pre"></span>
-          <input type="text" id="cmd-input" class="w-full bg-transparent border-none outline-none text-term-fg caret-term-purple z-10 font-bold" autocomplete="off" spellcheck="false" title="Comando">
+      <terminal-prompt class="px-4 pb-16 pt-2 flex items-center shrink-0 block relative">
+        <span class="prompt-user whitespace-nowrap text-sm sm:text-base pr-2">
+          <span class="hidden sm:inline"><span class="text-term-green font-bold">thierry</span><span class="text-term-fg opacity-40">@</span><span class="text-term-blue">thierryrenematos.tec.br</span><span class="text-term-fg opacity-40">:</span><span class="text-term-purple font-bold">~</span></span><span class="text-term-fg text-term-green sm:text-term-fg font-bold sm:font-normal"> $</span>
+        </span>
+        <div class="relative flex-1 flex items-center">
+          <span id="ghost-text" class="absolute pointer-events-none text-term-fg opacity-25 whitespace-pre"></span>
+          <input type="text" id="cmd-input"
+            class="w-full bg-transparent border-none outline-none text-term-fg caret-term-purple z-10 font-bold"
+            autocomplete="off" spellcheck="false" title="Comando">
         </div>
       </terminal-prompt>
 
       <!-- Quick Actions / Toolbar -->
-      <quick-actions id="quick-actions" class="absolute bottom-0 left-0 right-0 h-12 bg-black/40 backdrop-blur px-4 flex items-center gap-2 overflow-x-auto z-20 border-t border-white/5 block">
+      <quick-actions id="quick-actions"
+        class="absolute bottom-0 left-0 right-0 h-12 bg-black/40 backdrop-blur px-4 flex items-center gap-2 overflow-x-auto z-20 border-t border-white/5 block transition-colors duration-300">
         <!-- Buttons injected dynamically -->
       </quick-actions>
-      
+
     </terminal-window>
   </div>
 
   <!-- HTML TEMPLATES -->
-  
+
   <template id="tpl-cmds">
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 w-full my-2 slide-in"></div>
   </template>
 
   <template id="tpl-neofetch">
-    <div class="flex flex-col md:flex-row items-center md:items-start gap-6 my-4 slide-in w-full">
-      <pre class="whitespace-pre leading-none font-mono font-bold text-term-green text-[10px] sm:text-xs logo-art"></pre>
-      <div class="flex-1 w-full">
-        <div class="grid grid-cols-[120px_1fr] gap-x-2 gap-y-1 text-sm host-data mb-4"></div>
-        <div class="flex shrink-0 w-full color-blocks">
-           <div class="w-6 h-6 bg-black"></div><div class="w-6 h-6 bg-red-500"></div>
-           <div class="w-6 h-6 bg-green-500"></div><div class="w-6 h-6 bg-yellow-500"></div>
-           <div class="w-6 h-6 bg-blue-500"></div><div class="w-6 h-6 bg-purple-500"></div>
-           <div class="w-6 h-6 bg-cyan-500"></div><div class="w-6 h-6 bg-white"></div>
+    <div class="flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-8 my-4 slide-in w-full">
+      <pre
+        class="whitespace-pre leading-none font-mono font-bold text-term-green text-[14px] sm:text-[9px] md:text-xs logo-art self-start md:self-center"></pre>
+        <div class="flex-1 w-full md:border-l md:border-white/10 md:pl-8">
+          <div class="grid grid-cols-[72px_1fr] sm:grid-cols-[100px_1fr] md:grid-cols-[120px_1fr] gap-x-2 gap-y-1 md:gap-y-1.5 text-xs sm:text-sm host-data mb-3 md:mb-5"></div>
         </div>
-      </div>
     </div>
   </template>
 
@@ -115,10 +123,11 @@
 
   <template id="tpl-post">
     <article class="my-6 p-6 border border-white/10 rounded bg-white/5 slide-in w-full max-w-4xl">
-      <h1 class="text-2xl text-term-cyan font-bold mb-2 title-el"></h1>
+      <h1 class="font-bold text-term-cyan mb-2 title-el"></h1>
       <div class="flex gap-2 mb-4 tags-el text-xs"></div>
-      <div class="leading-relaxed text-slate-300 content-el text-sm sm:text-base mb-6 font-sans"></div>
-      <button class="px-4 py-2 bg-white/10 hover:bg-white/20 rounded font-mono text-xs transition-colors btn-back text-term-fg">
+      <div class="leading-relaxed text-term-fg opacity-80 content-el sm:text-base mb-6 font-sans"></div>
+      <button
+        class="px-4 py-2 bg-white/10 hover:bg-white/20 rounded font-mono text-xs transition-colors btn-back text-term-fg">
         [ ↩ Pressione para Voltar ao Índice ]
       </button>
     </article>
@@ -128,7 +137,31 @@
     <div class="grid grid-cols-[100px_1fr] gap-2 my-4 contact-container slide-in"></div>
   </template>
 
+  <!-- ParticlesJS Library -->
+  <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+  <script>
+    if (window.innerWidth >= 640) {
+      particlesJS("particles-js", {
+        "particles": {
+          "number": {"value": 80, "density": {"enable": true, "value_area": 800}},
+          "color": {"value": ["#50fa7b", "#8be9fd", "#bd93f9", "#f1fa8c", "#ff79c6", "#ffb86c", "#ff5555"]},
+          "opacity": {"value": 0.4, "random": true},
+          "size": {"value": 4, "random": true},
+          "line_linked": {"enable": true, "distance": 130, "color": "#ffffff", "opacity": 0.15, "width": 1},
+          "move": {"enable": true, "speed": 1.5}
+        },
+        "interactivity": {
+          "detect_on": "canvas",
+          "events": {"onhover": {"enable": true, "mode": "grab"}, "onclick": {"enable": true, "mode": "push"}},
+          "modes": {"grab": {"distance": 140, "line_linked": {"opacity": 0.4}}}
+        },
+        "retina_detect": true
+      });
+    }
+  </script>
+
   <!-- SCRIPT BUNDLE (ESM, Reatividade, Lógica de Comandos) -->
   <script type="module" src="main.js"></script>
 </body>
+
 </html>
