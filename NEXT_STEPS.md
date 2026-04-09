@@ -1,6 +1,7 @@
-- criar seção about/sobre
-- criar primeiro post real no blog
-- como o site não tem paginação, o registros de views no analytics devem ser feitos de acordo com os comandos executados. faça as adaptações necessárias para que os comandos disparem os pageviews necessários. as urls também devem mudar de acordo com a interação no prompt.
-- aplicar o padrão de desenvolvimento SDD no projeto
-- ajustar o bloco colors nas informações do terminal. esse item está totalemnte perdido no contexto do website.
-- no mobile, apresentar apenas $ no input do terminal. no desktop pode ficar o texto atual.
+- adicionar controle de linguagem no website
+- adicionar controle de dark/light do tema
+- adicionar outros themes de cores no terminal
+- adicionar controle de linguagem para pt-br e ingles
+- criar definição de como deve ser o output do terminal para que padronize o output dos comandos do site na hora de apresentar conteúdo, pois atualmente cada comando tem um output diferente, até com a fonte divergente
+- estruturar melhor o blog, ajustando estrutura de links de acordo com titulo dos posts e integrando as ações js que encaminham dados para o google analytics
+- ainda na seção do blog, vamos padronizar o output dos posts seguindo o padrão de output do terminal. apresentar titulo, categoria do post, data, autor e conteudo.
