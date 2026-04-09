@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>404 - Terminal Portfolio</title>
+  <style>
+    :root {
+      --bg: #05070a;
+      --fg: #d9e1e8;
+      --muted: #88a0b8;
+      --green: #5ef28d;
+      --red: #ff6b6b;
+      --yellow: #f5dd6e;
+      --border: rgba(255, 255, 255, 0.1);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(circle at 20% 20%, #0b1220, var(--bg) 55%);
+      color: var(--fg);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      padding: 20px;
+    }
+
+    .terminal {
+      width: min(920px, 100%);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 14px 50px rgba(0, 0, 0, 0.45);
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(6px);
+    }
+
+    .header {
+      height: 40px;
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      padding: 0 14px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .dots {
+      display: flex;
+      gap: 8px;
+      margin-right: 12px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+    }
+
+    .dot.red { background: #ff5f56; }
+    .dot.yellow { background: #ffbd2e; }
+    .dot.green { background: #27c93f; }
+
+    .body {
+      padding: 20px;
+      line-height: 1.45;
+    }
+
+    pre {
+      margin: 0 0 16px;
+      color: var(--red);
+      font-size: 13px;
+      white-space: pre;
+      overflow-x: auto;
+    }
+
+    .line { margin: 0 0 10px; }
+    .muted { color: var(--muted); }
+    .warn { color: var(--yellow); }
+    .ok { color: var(--green); }
+
+    a {
+      color: var(--green);
+      text-decoration: none;
+      border-bottom: 1px dashed rgba(94, 242, 141, 0.5);
+    }
+
+    a:hover { border-bottom-style: solid; }
+
+    @media (max-width: 640px) {
+      .body { padding: 16px; }
+      pre { font-size: 11px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="terminal" role="main" aria-label="404 terminal not found">
+    <div class="header">
+      <div class="dots" aria-hidden="true">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      thierry@thierryrenematos.tec.br:~
+    </div>
+    <section class="body">
+      <pre aria-hidden="true"> _  _    ___  _  _
+| || |  / _ \| || |
+| || |_| | | | || |_
+|__   _| |_| |__   _|
+   |_|  \___/   |_|</pre>
+
+      <p class="line"><span class="warn">URL nao encontrada:</span> <span id="requested-path"></span></p>
+      <p class="line muted">A rota solicitada nao existe neste servidor.</p>
+      <p class="line">Use <span class="ok">/#help</span> para abrir os comandos do terminal.</p>
+      <p class="line">Se for um post, tente o formato: <span class="ok">/#read/seu-slug</span>.</p>
+      <p class="line">Retornar para <a href="/">pagina inicial</a>.</p>
+    </section>
+  </main>
+
+  <script>
+    const path = window.location.pathname || '/';
+    document.getElementById('requested-path').textContent = path;
+
+    const segments = path.split('/').filter(Boolean);
+    if (segments[0] === 'blog') {
+      if (segments.length > 1) {
+        const slug = encodeURIComponent(segments.slice(1).join('/'));
+        window.location.replace(`/#read/${slug}`);
+      } else {
+        window.location.replace('/#blog');
+      }
+    }
+  </script>
+</body>
+</html>
