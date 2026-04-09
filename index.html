@@ -53,6 +53,10 @@
         <div class="w-3 h-3 rounded-full bg-green-500 border border-green-600"></div>
       </div>
       <div class="flex-1 text-center font-mono text-xs text-term-fg opacity-40">thierry@thierryrenematos.tec.br — zsh</div>
+      <div id="layout-controls" class="absolute right-4 flex items-center gap-2">
+        <button id="lang-toggle-btn" type="button" class="control-btn" aria-label="Switch language" title="Switch language">PT-BR</button>
+        <button id="mode-toggle-btn" type="button" class="control-btn" aria-label="Toggle dark or light theme" title="Toggle dark or light theme">Dark</button>
+      </div>
     </div>
 
     <!-- Terminal Root Component -->
@@ -72,7 +76,7 @@
           <span id="ghost-text" class="absolute pointer-events-none text-term-fg opacity-25 whitespace-pre"></span>
           <input type="text" id="cmd-input"
             class="w-full bg-transparent border-none outline-none text-term-fg caret-term-purple z-10 font-bold"
-            autocomplete="off" spellcheck="false" title="Comando">
+            autocomplete="off" spellcheck="false" title="Command">
         </div>
       </terminal-prompt>
 
@@ -92,12 +96,14 @@
   </template>
 
   <template id="tpl-neofetch">
-    <div class="flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-8 my-4 slide-in w-full">
-      <pre
-        class="whitespace-pre leading-none font-mono font-bold text-term-green text-[14px] sm:text-[9px] md:text-xs logo-art self-start md:self-center"></pre>
-        <div class="flex-1 w-full md:border-l md:border-white/10 md:pl-8">
-          <div class="grid grid-cols-[72px_1fr] sm:grid-cols-[100px_1fr] md:grid-cols-[120px_1fr] gap-x-2 gap-y-1 md:gap-y-1.5 text-xs sm:text-sm host-data mb-3 md:mb-5"></div>
-        </div>
+    <div class="flex flex-col md:grid md:grid-cols-[auto_1fr] gap-y-6 gap-x-3 md:gap-x-8 items-start md:items-center my-4 slide-in w-full">
+      <pre class="whitespace-pre leading-none font-mono font-bold text-term-green text-[14px] sm:text-[9px] md:text-xs logo-art self-start md:self-center order-1 md:col-start-1 md:row-start-1"></pre>
+      
+      <div class="w-full md:pl-8 self-start order-2 md:col-start-2 md:row-start-1 md:row-span-2">
+        <div class="grid grid-cols-[72px_1fr] sm:grid-cols-[100px_1fr] md:grid-cols-[120px_1fr] gap-x-2 gap-y-1 md:gap-y-1.5 text-xs sm:text-sm host-data mb-3 md:mb-5"></div>
+      </div>
+      
+      <div class="lastfm-block-container w-full order-3 md:col-start-1 md:row-start-2 self-start md:self-center"></div>
     </div>
   </template>
 
@@ -114,7 +120,7 @@
   </template>
 
   <template id="tpl-skills">
-    <div class="my-4 space-y-4 skills-container slide-in"></div>
+    <div class="my-4 space-y-4 skills-container slide-in terminal-section-body"></div>
   </template>
 
   <template id="tpl-blog-list">
@@ -122,10 +128,11 @@
   </template>
 
   <template id="tpl-post">
-    <article class="my-6 p-6 border border-white/10 rounded bg-white/5 slide-in w-full max-w-4xl">
-      <h1 class="font-bold text-term-cyan mb-2 title-el"></h1>
+    <article class="my-6 p-6 border border-white/10 rounded bg-white/5 slide-in w-full max-w-4xl terminal-section">
+      <h1 class="font-bold text-term-cyan mb-2 title-el terminal-section-title"></h1>
+      <div class="meta-el text-term-fg opacity-60 text-xs mb-3 flex flex-wrap gap-2 terminal-section-meta"></div>
       <div class="flex gap-2 mb-4 tags-el text-xs"></div>
-      <div class="leading-relaxed text-term-fg opacity-80 content-el sm:text-base mb-6 font-sans"></div>
+      <div class="leading-relaxed text-term-fg opacity-80 content-el text-sm sm:text-base mb-6 terminal-section-body"></div>
       <button
         class="px-4 py-2 bg-white/10 hover:bg-white/20 rounded font-mono text-xs transition-colors btn-back text-term-fg">
         [ ↩ Pressione para Voltar ao Índice ]
@@ -135,6 +142,12 @@
 
   <template id="tpl-contact">
     <div class="grid grid-cols-[100px_1fr] gap-2 my-4 contact-container slide-in"></div>
+  </template>
+
+  <template id="tpl-about">
+    <div class="my-4 space-y-4 slide-in leading-relaxed text-term-fg opacity-80 text-sm sm:text-base terminal-section-body">
+      <div class="about-content"></div>
+    </div>
   </template>
 
   <!-- ParticlesJS Library -->
@@ -158,6 +171,31 @@
         "retina_detect": true
       });
     }
+  </script>
+
+  <script>
+    window.__ENV_READY__ = (async () => {
+      try {
+        const response = await fetch('.env', { cache: 'no-store' });
+        if (!response.ok) return;
+
+        const text = await response.text();
+        const pairs = text.split('\n');
+        for (const raw of pairs) {
+          const line = raw.trim();
+          if (!line || line.startsWith('#')) continue;
+          const idx = line.indexOf('=');
+          if (idx <= 0) continue;
+
+          const key = line.slice(0, idx).trim();
+          const value = line.slice(idx + 1).trim().replace(/^['"]|['"]$/g, '');
+          if (key === 'LASTFM_API_KEY') window.__LASTFM_API_KEY__ = value;
+          if (key === 'LASTFM_USERNAME') window.__LASTFM_USER__ = value;
+        }
+      } catch {
+        // Keep silent fallback: Last.fm block will render unavailable state.
+      }
+    })();
   </script>
 
   <!-- SCRIPT BUNDLE (ESM, Reatividade, Lógica de Comandos) -->

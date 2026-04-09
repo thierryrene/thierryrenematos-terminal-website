@@ -14,11 +14,21 @@ const profileData = {
     stack: 'PHP, JavaScript, React.js, Laravel, Vue.js, AWS, GA4'
 };
 
+const lastFmEndpoint = 'https://ws.audioscrobbler.com/2.0/';
+
+function getLastFmConfig() {
+    return {
+        endpoint: lastFmEndpoint,
+        user: String(window.__LASTFM_USER__ || 'thierryrenematos').trim(),
+        apiKey: String(window.__LASTFM_API_KEY__ || '').trim()
+    };
+}
+
 const contacts = [
-    { platform: 'E-mail', link: 'mailto:contato@thierryrene.com', display: 'contato@thierryrene.com', icon: '📧' },
+    { platform: 'E-mail', link: 'mailto:thierryrenesantosmatos+website@gmail.com', display: 'thierryrenesantosmatos+website@gmail.com', icon: '📧' },
     { platform: 'GitHub', link: 'https://github.com/thierryrene', display: 'github.com/thierryrene', icon: '🐙' },
     { platform: 'LinkedIn', link: 'https://linkedin.com/in/thierryrene', display: 'linkedin.com/in/thierryrene', icon: '🔗' },
-    { platform: 'Instagram', link: 'https://instagram.com/thierryrene', display: '@thierryrene', icon: '📸' }
+    { platform: 'Instagram', link: 'https://instagram.com/thierryrenematos', display: '@thierryrenematos', icon: '📸' }
 ];
 
 const experiences = [
@@ -99,27 +109,41 @@ const projects = [
 const skills = [
     { category: 'Back-End & Bancos de Dados', skills: [
         { name: 'PHP / Laravel Ecosystem', level: 9 },
-        { name: 'Node.js / Express', level: 7 },
+        { name: 'Node.js / Express', level: 8 },
+        { name: 'Go (Golang)', level: 7 },
         { name: 'PostgreSQL & MySQL', level: 8 },
-        { name: 'Redis / Memcached caching', level: 7 }
+        { name: 'Redis / Memcached', level: 7 }
     ]},
     { category: 'Front-End & Engenharia de UI', skills: [
-        { name: 'JavaScript (ESNext/ES2022+)', level: 9 },
+        { name: 'JavaScript / TypeScript', level: 9 },
+        { name: 'React.js / Next.js', level: 8 },
         { name: 'Vue.js 3 / Composition API', level: 8 },
-        { name: 'Tailwind CSS / JIT Engine', level: 9 },
-        { name: 'HTML5 & Web Components', level: 8 }
+        { name: 'Tailwind CSS', level: 9 }
     ]},
-    { category: 'DevOps & Infraestrutura Nuvem', skills: [
-        { name: 'Linux Server Administration (Ubuntu)', level: 8 },
-        { name: 'Docker / Containers Orchestration', level: 8 },
-        { name: 'FrankenPHP / Caddy / Nginx', level: 7 },
-        { name: 'CI/CD Pipelines (GitHub Actions)', level: 7 }
+    { category: 'DevOps, Cloud & Dados', skills: [
+        { name: 'AWS & Cloud Architecture', level: 8 },
+        { name: 'Linux Server (Ubuntu)', level: 8 },
+        { name: 'Docker / Containers', level: 8 },
+        { name: 'Google Analytics (GA4) / SEO', level: 9 }
     ]}
+];
+
+const aboutData = [
+    'Com mais de 15 anos de experiência no desenvolvimento web, sou apaixonado por criar soluções inovadoras e funcionais para o ecossistema digital. Minha missão é aplicar conhecimentos profundos em desenvolvimento back-end, dados e arquitetura para entregar produtos escaláveis que superem as expectativas de clientes e usuários.',
+    'Atualmente atuo como Desenvolvedor Web Sênior no Steal The Look, uma plataforma líder em moda e lifestyle. Lá, sou o responsável integral pela área de Tecnologia com foco absoluto em ambientes web e digital de alta performance. Administro e mantemos infraestruturas de servidores na nuvem AWS, além de realizar otimizações estruturais tanto no Front-End quanto no Back-End.',
+    'Minha principal frente de atuação engloba performance (resolvendo gargalos de Core Web Vitals), SEO e integração avançada de novas ferramentas, garantindo arquiteturas seguras, confiáveis e que acompanham a velocidade de crescimento do negócio.'
+];
+
+const aboutDataEn = [
+    'With over 15 years of experience in web development, I am passionate about building innovative and reliable solutions for the digital ecosystem. My mission is to apply deep knowledge in back-end development, data, and architecture to deliver scalable products that exceed expectations.',
+    'I currently work as a Senior Web Developer at Steal The Look, a leading fashion and lifestyle platform. I am responsible for the entire Technology area focused on high-performance web and digital environments, including AWS cloud infrastructure and structural optimizations on both Front-End and Back-End.',
+    'My main focus includes performance optimization (solving Core Web Vitals bottlenecks), SEO, and advanced integration of new tools, ensuring secure, reliable architectures that keep up with business growth.'
 ];
 
 const blogPosts = [
     { 
         id: 1, 
+        slug: 'explorando-o-high-performance-com-frankenphp',
         date: '2024-03-20', 
         title: 'Explorando o High-Performance com FrankenPHP', 
         tags: ['PHP', 'DevOps', 'Performance Tuning'],
@@ -127,6 +151,7 @@ const blogPosts = [
     },
     { 
         id: 2, 
+        slug: 'configurando-o-ubuntu-server-para-workloads-de-producao',
         date: '2024-02-15', 
         title: 'Configurando o Ubuntu Server para Workloads de Produção', 
         tags: ['Linux', 'Server Setup', 'Security', 'SysAdmin'],
@@ -134,6 +159,7 @@ const blogPosts = [
     },
     { 
         id: 3, 
+        slug: 'a-magia-indomavel-do-tailwind-css-no-ecossistema-laravel',
         date: '2024-01-10', 
         title: 'A magia indomável do Tailwind CSS no ecossistema Laravel', 
         tags: ['Frontend', 'Laravel', 'CSS Architecture', 'Inertia.js'],
@@ -151,11 +177,359 @@ const themesConfig = {
   'monokai-light': { bg: '#fafafa', fg: '#272822', green: '#7db90b', blue: '#0594ab', purple: '#8e4aff', yellow: '#d2b610',   header: '#e8e8e4', border: 'rgba(0,0,0,0.10)' }
 };
 
+const i18n = {
+    'pt-BR': {
+        inputTitle: 'Comando',
+        runCommandAria: 'Executar comando {cmd}',
+        helpTitle: 'Comandos Disponiveis',
+        helpMeta: 'Clique em um comando para executar automaticamente.',
+        helpDesc: {
+            help: 'Lista todos os comandos',
+            home: 'Recarrega o terminal e abre a tela inicial',
+            about: 'Sobre mim e resumo profissional',
+            ls: 'Lista o diretorio atual',
+            projects: 'Portfolio open-source',
+            experience: 'Historico profissional',
+            skills: 'Matriz de habilidades',
+            blog: 'Artigos tecnicos',
+            contact: 'Minhas redes e conexoes',
+            theme: 'Muda cor (dracula, monokai...)',
+            shortcuts: 'Teclas de atalho',
+            clear: 'Limpa o console'
+        },
+        shortcutsTitle: 'Atalhos de Teclado Disponiveis:',
+        shortcutsMeta: 'Combinacoes para navegar e editar no terminal.',
+        shortcutsMap: [
+            { k: 'ArrowUp', d: 'Carrega o comando anterior do historico' },
+            { k: 'ArrowDown', d: 'Avanca no historico de comandos' },
+            { k: 'Tab', d: 'Autocompleta o comando sugerido' },
+            { k: 'Ctrl + L', d: 'Limpa a tela do terminal (clear)' },
+            { k: 'Ctrl + C', d: 'Cancela a digitacao atual e pula linha' },
+            { k: 'Ctrl + U', d: 'Apaga toda a linha digitada' },
+            { k: 'Ctrl + W', d: 'Apaga a ultima palavra digitada' }
+        ],
+        neofetchTitle: 'System Snapshot',
+        neofetchMeta: 'Resumo rapido do ambiente e stack ativa.',
+        lastFmTitle: 'Now Playing',
+        lastFmLoading: 'Carregando atividade musical...',
+        lastFmNowPlaying: 'Tocando agora',
+        lastFmLastPlayed: 'Ultima tocada {elapsed}',
+        lastFmUnavailable: 'Nao foi possivel consultar o Last.fm agora.',
+        lastFmNoData: 'Nenhuma musica recente encontrada.',
+        lastFmUnknownTrack: 'Faixa desconhecida',
+        lastFmUnknownArtist: 'Artista desconhecido',
+        lastFmUnknownAlbum: 'Album desconhecido',
+        lastFmArtistLink: 'Artista no Last.fm',
+        lastFmAlbumLink: 'Album no Last.fm',
+        lsTitle: 'Directory Listing',
+        lsMeta: 'Itens navegaveis do portfolio no contexto atual.',
+        experienceTitle: 'Experiencia',
+        experienceMeta: 'Linha do tempo profissional e principais entregas.',
+        projectsTitle: 'Projetos',
+        projectsMeta: 'Selecao de projetos e tecnologias utilizadas.',
+        aboutTitle: 'About',
+        aboutMeta: 'Resumo profissional e foco atual de atuacao.',
+        skillsMeta: 'Matriz de habilidades por categoria com progresso em estilo terminal.',
+        blogTitle: 'Blog',
+        blogMeta: 'Lista de artigos tecnicos. Use setas para navegar e Enter para abrir.',
+        blogHint: 'Dica: digite read <slug> para abrir direto.',
+        blogNavHint: 'Dica: Use as setas (CIMA/BAIXO) para navegar e ENTER para ler o post selecionado.',
+        contactTitle: 'Contato',
+        contactMeta: 'Canais oficiais para conexao e networking.',
+        readHint: 'Dica: use blog para voltar para a lista de artigos.',
+        readBack: '[ ↩ Voltar para o indice ]',
+        readArgError: 'Bash: read: Esperava o argumento <slug>',
+        readNotFound: "Bash: read: Artigo com slug '{slug}' nao encontrado.",
+        urlNotFoundTitle: '404 Not Found',
+        urlNotFoundMeta: 'A URL solicitada nao existe neste terminal.',
+        urlNotFoundBody: "A rota '{url}' nao foi encontrada.",
+        urlNotFoundHint: "Use 'help' para ver comandos validos ou abra links no formato /#read/<slug>.",
+        readAuthor: 'Autor',
+        themeSupported: 'Temas suportados: {themes}. Uso: theme <nome>',
+        themeNotFound: "Tema '{theme}' nao localizado.",
+        didYouMean: " Voce quis dizer '{suggestion}'?",
+        themeActivated: 'Tema ativado: {theme}',
+        bootReady: "<i>Ambiente pronto. Digite 'help' para iniciar.</i>",
+        langButton: 'PT-BR',
+        langButtonTitle: 'Alternar idioma',
+        modeDark: 'Dark',
+        modeLight: 'Light',
+        modeButtonTitle: 'Alternar tema claro/escuro'
+    },
+    en: {
+        inputTitle: 'Command',
+        runCommandAria: 'Run command {cmd}',
+        helpTitle: 'Available Commands',
+        helpMeta: 'Click a command to execute it automatically.',
+        helpDesc: {
+            help: 'List all commands',
+            home: 'Reload terminal and open the initial screen',
+            about: 'About me and professional summary',
+            ls: 'List current directory',
+            projects: 'Open-source portfolio',
+            experience: 'Professional history',
+            skills: 'Skills matrix',
+            blog: 'Technical articles',
+            contact: 'My networks and connections',
+            theme: 'Change colors (dracula, monokai...)',
+            shortcuts: 'Keyboard shortcuts',
+            clear: 'Clear console'
+        },
+        shortcutsTitle: 'Available Keyboard Shortcuts:',
+        shortcutsMeta: 'Combinations to navigate and edit inside the terminal.',
+        shortcutsMap: [
+            { k: 'ArrowUp', d: 'Load previous command from history' },
+            { k: 'ArrowDown', d: 'Move forward in command history' },
+            { k: 'Tab', d: 'Autocomplete suggested command' },
+            { k: 'Ctrl + L', d: 'Clear terminal screen (clear)' },
+            { k: 'Ctrl + C', d: 'Cancel current typing and go to new line' },
+            { k: 'Ctrl + U', d: 'Delete the entire current line' },
+            { k: 'Ctrl + W', d: 'Delete the previous word' }
+        ],
+        neofetchTitle: 'System Snapshot',
+        neofetchMeta: 'Quick overview of environment and active stack.',
+        lastFmTitle: 'Now Playing',
+        lastFmLoading: 'Loading listening activity...',
+        lastFmNowPlaying: 'Now playing',
+        lastFmLastPlayed: 'Last played {elapsed}',
+        lastFmUnavailable: 'Unable to fetch Last.fm right now.',
+        lastFmNoData: 'No recent tracks found.',
+        lastFmUnknownTrack: 'Unknown track',
+        lastFmUnknownArtist: 'Unknown artist',
+        lastFmUnknownAlbum: 'Unknown album',
+        lastFmArtistLink: 'Artist on Last.fm',
+        lastFmAlbumLink: 'Album on Last.fm',
+        lsTitle: 'Directory Listing',
+        lsMeta: 'Navigable portfolio items in current context.',
+        experienceTitle: 'Experience',
+        experienceMeta: 'Professional timeline and key outcomes.',
+        projectsTitle: 'Projects',
+        projectsMeta: 'Selected projects and technologies used.',
+        aboutTitle: 'About',
+        aboutMeta: 'Professional summary and current focus.',
+        skillsMeta: 'Skills matrix by category with terminal-style progress.',
+        blogTitle: 'Blog',
+        blogMeta: 'List of technical posts. Use arrow keys to navigate and Enter to open.',
+        blogHint: 'Tip: type read <slug> to open directly.',
+        blogNavHint: 'Tip: Use UP/DOWN arrows to navigate and ENTER to read the selected post.',
+        contactTitle: 'Contact',
+        contactMeta: 'Official channels for connection and networking.',
+        readHint: 'Tip: use blog to return to the post list.',
+        readBack: '[ ↩ Back to index ]',
+        readArgError: 'Bash: read: Expected argument <slug>',
+        readNotFound: "Bash: read: Post with slug '{slug}' was not found.",
+        urlNotFoundTitle: '404 Not Found',
+        urlNotFoundMeta: 'The requested URL does not exist in this terminal.',
+        urlNotFoundBody: "Route '{url}' was not found.",
+        urlNotFoundHint: "Type 'help' to list valid commands or use /#read/<slug> links.",
+        readAuthor: 'Author',
+        themeSupported: 'Supported themes: {themes}. Usage: theme <name>',
+        themeNotFound: "Theme '{theme}' not found.",
+        didYouMean: " Did you mean '{suggestion}'?",
+        themeActivated: 'Theme activated: {theme}',
+        bootReady: "<i>Environment ready. Type 'help' to start.</i>",
+        langButton: 'EN',
+        langButtonTitle: 'Switch language',
+        modeDark: 'Dark',
+        modeLight: 'Light',
+        modeButtonTitle: 'Toggle dark/light mode'
+    }
+};
+
+function t(key, vars = {}) {
+    const locale = state.language in i18n ? state.language : 'en';
+    const source = i18n[locale];
+    const fallback = i18n.en;
+    const raw = key.split('.').reduce((acc, part) => (acc && acc[part] !== undefined ? acc[part] : undefined), source)
+        ?? key.split('.').reduce((acc, part) => (acc && acc[part] !== undefined ? acc[part] : undefined), fallback)
+        ?? key;
+
+    if (typeof raw !== 'string') return raw;
+    return raw.replace(/\{(\w+)\}/g, (_, name) => (vars[name] !== undefined ? vars[name] : `{${name}}`));
+}
+
+function isLightTheme(themeName) {
+    return themeName.endsWith('-light');
+}
+
+function getThemeFamily(themeName) {
+    return themeName.replace(/-light$/, '');
+}
+
+function getThemeFamilies() {
+    return [...new Set(Object.keys(themesConfig).map(getThemeFamily))];
+}
+
+function getDateLocale() {
+    return state.language === 'pt-BR' ? 'pt-BR' : 'en-US';
+}
+
+function formatDisplayDate(dateValue) {
+    return new Intl.DateTimeFormat(getDateLocale(), { dateStyle: 'medium' }).format(new Date(dateValue));
+}
+
+function escapeHtml(value = '') {
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function formatElapsedFromUnix(uts) {
+    if (!uts) return '';
+    const diffSeconds = Math.round((Number(uts) * 1000 - Date.now()) / 1000);
+    const abs = Math.abs(diffSeconds);
+    const rtf = new Intl.RelativeTimeFormat(getDateLocale(), { numeric: 'auto' });
+
+    if (abs < 60) return rtf.format(diffSeconds, 'second');
+    if (abs < 3600) return rtf.format(Math.round(diffSeconds / 60), 'minute');
+    if (abs < 86400) return rtf.format(Math.round(diffSeconds / 3600), 'hour');
+    return rtf.format(Math.round(diffSeconds / 86400), 'day');
+}
+
+function buildLastFmUrl(artist, album = '') {
+    const artistPart = encodeURIComponent((artist || '').trim());
+    if (!artistPart) return 'https://www.last.fm';
+    if (!album) return `https://www.last.fm/music/${artistPart}`;
+    return `https://www.last.fm/music/${artistPart}/${encodeURIComponent(album.trim())}`;
+}
+
+function pickLastFmImage(images = []) {
+    const preferred = ['extralarge', 'large', 'medium', 'small'];
+    for (const size of preferred) {
+        const found = images.find(img => img.size === size && img['#text']);
+        if (found) return found['#text'];
+    }
+    return '';
+}
+
+async function fetchLastFmRecentTrack() {
+    if (window.__ENV_READY__) {
+        try { await window.__ENV_READY__; } catch {}
+    }
+
+    const lastFmConfig = getLastFmConfig();
+    if (!lastFmConfig.apiKey || !lastFmConfig.user) return { unavailable: true };
+
+    const params = new URLSearchParams({
+        method: 'user.getrecenttracks',
+        user: lastFmConfig.user,
+        api_key: lastFmConfig.apiKey,
+        format: 'json',
+        limit: '1'
+    });
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 4500);
+
+    try {
+        const response = await fetch(`${lastFmConfig.endpoint}?${params.toString()}`, {
+            signal: controller.signal
+        });
+        if (!response.ok) return { unavailable: true };
+
+        const payload = await response.json();
+        const rawTrack = Array.isArray(payload?.recenttracks?.track)
+            ? payload.recenttracks.track[0]
+            : payload?.recenttracks?.track;
+
+        if (!rawTrack) return { empty: true };
+
+        const artistName = rawTrack?.artist?.['#text'] || rawTrack?.artist?.name || t('lastFmUnknownArtist');
+        const albumName = rawTrack?.album?.['#text'] || t('lastFmUnknownAlbum');
+        const trackName = rawTrack?.name || t('lastFmUnknownTrack');
+        const isNowPlaying = rawTrack?.['@attr']?.nowplaying === 'true';
+
+        return {
+            isNowPlaying,
+            trackName,
+            artistName,
+            albumName,
+            albumImage: pickLastFmImage(rawTrack?.image || []),
+            trackUrl: rawTrack?.url || '',
+            artistUrl: buildLastFmUrl(artistName),
+            albumUrl: buildLastFmUrl(artistName, albumName),
+            elapsed: isNowPlaying ? '' : formatElapsedFromUnix(rawTrack?.date?.uts)
+        };
+    } catch {
+        return { unavailable: true };
+    } finally {
+        clearTimeout(timeoutId);
+    }
+}
+
+function renderLastFmBlock(container, data) {
+    const loading = data?.loading;
+    const unavailable = data?.unavailable;
+    const empty = data?.empty;
+
+    const statusText = loading
+        ? t('lastFmLoading')
+        : unavailable
+            ? t('lastFmUnavailable')
+            : empty
+                ? t('lastFmNoData')
+                : data.isNowPlaying
+                    ? t('lastFmNowPlaying')
+                    : t('lastFmLastPlayed', { elapsed: data.elapsed || '' });
+
+    const statusClass = loading
+        ? 'text-term-comment'
+        : unavailable || empty
+            ? 'text-term-yellow'
+            : data.isNowPlaying
+                ? 'text-term-green'
+                : 'text-term-yellow';
+
+    if (loading || unavailable || empty) {
+        container.innerHTML = `
+            <div>
+                <div class="text-[10px] uppercase tracking-wide text-term-purple mb-1">LAST.FM · ${escapeHtml(t('lastFmTitle'))}</div>
+                <div class="text-xs sm:text-sm ${statusClass}">${escapeHtml(statusText)}</div>
+            </div>
+        `;
+        return;
+    }
+
+    const albumCover = data.albumImage
+        ? `<img src="${escapeHtml(data.albumImage)}" alt="${escapeHtml(data.albumName)}" class="w-[73px] h-[73px] sm:w-[83px] sm:h-[83px] rounded object-cover border border-white/10 shrink-0" loading="lazy" referrerpolicy="no-referrer" />`
+        : `<div class="w-[73px] h-[73px] sm:w-[83px] sm:h-[83px] rounded border border-white/10 bg-black/20 flex items-center justify-center text-term-purple shrink-0">♫</div>`;
+
+    const trackHref = data.trackUrl || data.albumUrl || 'https://www.last.fm';
+    const artistHref = data.artistUrl || 'https://www.last.fm';
+
+    container.innerHTML = `
+        <div>
+            <div class="text-[10px] uppercase tracking-widest font-bold text-term-purple mb-2">LAST.FM · ${escapeHtml(t('lastFmTitle'))}</div>
+            <div class="flex items-start gap-3">
+                ${albumCover}
+                <div class="min-w-0 flex-1 flex flex-col justify-center">
+                    <div class="text-xs sm:text-sm ${statusClass} mb-1">${escapeHtml(statusText)}</div>
+                    <a href="${escapeHtml(trackHref)}" target="_blank" rel="noopener noreferrer" class="text-term-fg font-bold text-sm sm:text-base leading-tight break-words hover:underline hover:text-term-green mb-0.5">${escapeHtml(data.trackName)}</a>
+                    <div>
+                        <a href="${escapeHtml(artistHref)}" target="_blank" rel="noopener noreferrer" class="text-term-fg opacity-80 text-xs sm:text-sm break-words hover:underline hover:text-term-blue">${escapeHtml(data.artistName)}</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+async function hydrateLastFmBlock(container) {
+    renderLastFmBlock(container, { loading: true });
+    const trackData = await fetchLastFmRecentTrack();
+    if (!container.isConnected) return;
+    renderLastFmBlock(container, trackData);
+}
+
 /* =========================================
  * 3. STATE MACHINE / PROXY
  * ========================================= */
 const initialState = {
     theme: localStorage.getItem('terminal_theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dracula' : 'dracula-light'),
+    language: localStorage.getItem('terminal_language') || (navigator.language.toLowerCase().startsWith('pt') ? 'pt-BR' : 'en'),
     history: [],
     historyIndex: -1,
     currentPath: '~'
@@ -168,6 +542,11 @@ const state = new Proxy(initialState, {
             localStorage.setItem('terminal_theme', value);
             const themeTheme = new CustomEvent('themeChanged', { detail: value });
             window.dispatchEvent(themeTheme);
+        }
+        if (property === 'language') {
+            localStorage.setItem('terminal_language', value);
+            const languageChanged = new CustomEvent('languageChanged', { detail: value });
+            window.dispatchEvent(languageChanged);
         }
         return true;
     }
@@ -210,6 +589,8 @@ window.dispatchEvent(new CustomEvent('themeChanged', { detail: state.theme }));
 const outputElem = document.getElementById('output');
 const inputElem = document.getElementById('cmd-input');
 const ghostElem = document.getElementById('ghost-text');
+const langToggleBtn = document.getElementById('lang-toggle-btn');
+const modeToggleBtn = document.getElementById('mode-toggle-btn');
 
 // Auto Scroll logic using Mutation Observer
 const observer = new MutationObserver(() => {
@@ -240,20 +621,82 @@ function executeCommandVisual(cmdStr) {
 }
 
 // Quick Actions Builder
-const availableCommands = ['help', 'neofetch', 'ls', 'projects', 'experience', 'skills', 'blog', 'contact', 'theme', 'shortcuts', 'clear'];
+const availableCommands = ['help', 'home', 'about', 'ls', 'projects', 'experience', 'skills', 'blog', 'contact', 'theme', 'shortcuts', 'clear'];
+const quickActionCommands = availableCommands.filter(cmd => cmd !== 'ls');
+const commandAliases = {
+    sobre: 'about',
+    neofetch: 'home'
+};
+
+function resolveCommandName(cmd) {
+    return commandAliases[cmd] || cmd;
+}
 const actionsBar = document.getElementById('quick-actions');
 
-availableCommands.forEach(cmd => {
-    const btn = document.createElement('button');
-    btn.className = 'bg-white/10 hover:bg-term-green/20 hover:text-term-green text-term-fg px-3 py-1 rounded text-xs transition-colors shrink-0 outline-none focus:ring-1 focus:ring-term-green';
-    btn.textContent = cmd;
-    btn.setAttribute('aria-label', `Executar comando ${cmd}`);
-    btn.onclick = () => { executeCommandVisual(cmd); };
-    actionsBar.appendChild(btn);
+function renderQuickActions() {
+    if (!actionsBar) return;
+    actionsBar.innerHTML = '';
+    quickActionCommands.forEach(cmd => {
+        const btn = document.createElement('button');
+        btn.className = 'bg-white/10 hover:bg-term-green/20 hover:text-term-green text-term-fg px-3 py-1 rounded text-xs transition-colors shrink-0 outline-none focus:ring-1 focus:ring-term-green';
+        btn.textContent = cmd;
+        btn.setAttribute('aria-label', t('runCommandAria', { cmd }));
+        btn.onclick = () => { executeCommandVisual(cmd); };
+        actionsBar.appendChild(btn);
+    });
+}
+
+function toggleLanguage() {
+    state.language = state.language === 'pt-BR' ? 'en' : 'pt-BR';
+}
+
+function toggleThemeMode() {
+    const family = getThemeFamily(state.theme);
+    const targetTheme = isLightTheme(state.theme) ? family : `${family}-light`;
+    if (themesConfig[targetTheme]) {
+        state.theme = targetTheme;
+        return;
+    }
+
+    state.theme = isLightTheme(state.theme) ? 'dracula' : 'dracula-light';
+}
+
+function updateLayoutControlLabels() {
+    document.documentElement.lang = state.language;
+    if (inputElem) inputElem.title = t('inputTitle');
+
+    if (langToggleBtn) {
+        langToggleBtn.textContent = t('langButton');
+        langToggleBtn.title = t('langButtonTitle');
+        langToggleBtn.setAttribute('aria-label', t('langButtonTitle'));
+    }
+
+    if (modeToggleBtn) {
+        const modeLabel = isLightTheme(state.theme) ? t('modeLight') : t('modeDark');
+        modeToggleBtn.textContent = modeLabel;
+        modeToggleBtn.title = t('modeButtonTitle');
+        modeToggleBtn.setAttribute('aria-label', t('modeButtonTitle'));
+    }
+}
+
+if (langToggleBtn) langToggleBtn.addEventListener('click', toggleLanguage);
+if (modeToggleBtn) modeToggleBtn.addEventListener('click', toggleThemeMode);
+
+window.addEventListener('languageChanged', () => {
+    renderQuickActions();
+    updateLayoutControlLabels();
+    rerenderCurrentViewForLanguage();
 });
 
+window.addEventListener('themeChanged', () => {
+    updateLayoutControlLabels();
+});
+
+renderQuickActions();
+updateLayoutControlLabels();
+
 // Analytics: Track command execution as a pageview
-function trackCommand(cmd) {
+function trackCommand(cmd, routePath = '') {
     if (typeof gtag !== 'function') return;
     const cleanCmd = cmd.trim().split(' ')[0].toLowerCase();
     
@@ -265,17 +708,129 @@ function trackCommand(cmd) {
         app_name: 'TerminalPortfolio',
         screen_name: cleanCmd,
         page_location: window.location.href,
-        page_path: '/#' + cleanCmd,
+        page_path: routePath || '/#' + cleanCmd,
         page_title: `Terminal - ${cleanCmd.charAt(0).toUpperCase() + cleanCmd.slice(1)}`
     });
 }
 
-// Deep Linking: Execute command from URL hash
-function handleDeepLink() {
-    const hash = window.location.hash.replace('#', '').trim();
-    if (hash && availableCommands.includes(hash)) {
-        setTimeout(() => { executeCommandVisual(hash); }, 500);
+function getRouteForCommand(cmd, args = []) {
+    if (cmd === 'read' && args.length > 0) {
+        return `/#read/${encodeURIComponent(args[0])}`;
     }
+    if (cmd === 'blog') {
+        return '/#blog';
+    }
+    return `/#${cmd}`;
+}
+
+function safeDecode(value) {
+    try {
+        return decodeURIComponent(value);
+    } catch {
+        return value;
+    }
+}
+
+function parseRouteFromLocation() {
+    const cleanPath = window.location.pathname.replace(/^\/+|\/+$/g, '');
+    if (cleanPath && cleanPath !== 'index.html') {
+        const parts = cleanPath.split('/').map(safeDecode);
+        const first = parts[0].toLowerCase();
+
+        if (first === 'blog') {
+            if (parts.length === 1 || !parts[1]) {
+                return { cmd: 'blog', args: [], route: window.location.pathname };
+            }
+
+            return { cmd: 'read', args: [parts.slice(1).join('/')], route: window.location.pathname };
+        }
+
+        return { invalid: true, route: window.location.pathname };
+    }
+
+    const hash = window.location.hash.replace('#', '').trim();
+    if (!hash) return null;
+
+    const hashParts = hash.split('/');
+    const cmd = hashParts[0].toLowerCase();
+    const args = hashParts.slice(1).map(safeDecode);
+    return { cmd, args, route: `/#${hash}` };
+}
+
+function renderUrlNotFound(route) {
+    const { section, body } = createTerminalSection({
+        title: t('urlNotFoundTitle'),
+        meta: t('urlNotFoundMeta'),
+        hint: t('urlNotFoundHint')
+    });
+
+    const art = document.createElement('pre');
+    art.className = 'text-term-red text-xs sm:text-sm leading-tight opacity-90';
+    art.textContent = String.raw`  _  _    ___  _  _
+ | || |  / _ \| || |
+ | || |_| | | | || |_
+ |__   _| |_| |__   _|
+    |_|  \___/   |_|`;
+    body.appendChild(art);
+
+    const msg = document.createElement('p');
+    msg.className = 'text-term-fg opacity-80 text-sm sm:text-base';
+    msg.textContent = t('urlNotFoundBody', { url: route || '/' });
+    body.appendChild(msg);
+
+    outputElem.appendChild(section);
+}
+
+// Deep Linking: Execute command from URL/hash or path
+function handleDeepLink({ excludedCommands = [] } = {}) {
+    const parsed = parseRouteFromLocation();
+    if (!parsed) return;
+
+    if (parsed.invalid) {
+        renderUrlNotFound(parsed.route);
+        return;
+    }
+
+    const normalized = resolveCommandName(parsed.cmd);
+    const args = parsed.args || [];
+    const routeableCommands = [...availableCommands, 'read'];
+    const isBlocked = excludedCommands.includes(normalized);
+    const isValid = routeableCommands.includes(normalized);
+
+    if (isValid && !isBlocked) {
+        if (normalized === 'read' && args.length === 0) {
+            renderUrlNotFound(parsed.route || '/');
+            return;
+        }
+        const fullCmd = args.length > 0 ? `${normalized} ${args.join(' ')}` : normalized;
+        setTimeout(() => { executeCommandVisual(fullCmd); }, 500);
+        return;
+    }
+
+    if (!isBlocked) renderUrlNotFound(parsed.route || '/');
+}
+
+function rerenderCurrentViewForLanguage() {
+    const parsed = parseRouteFromLocation();
+    if (!parsed) return;
+
+    if (parsed.invalid) {
+        commandsStrategy.clear();
+        commandsStrategy.homeSnapshot();
+        renderUrlNotFound(parsed.route || '/');
+        return;
+    }
+
+    const normalized = resolveCommandName(parsed.cmd);
+    const args = parsed.args || [];
+    if (!commandsStrategy[normalized]) return;
+
+    state.blogInteractive = false;
+    commandsStrategy.clear();
+    commandsStrategy.homeSnapshot();
+
+    if (normalized === 'clear' || normalized === 'home') return;
+    commandsStrategy[normalized](args);
 }
 
 // Write simple line
@@ -285,6 +840,36 @@ function writeLine(html, cssClass = '') {
   div.innerHTML = html;
   outputElem.appendChild(div);
   return div;
+}
+
+function createTerminalSection({ title, meta = '', hint = '' }) {
+    const section = document.createElement('section');
+    section.className = 'terminal-section slide-in my-4';
+
+    const titleEl = document.createElement('div');
+    titleEl.className = 'terminal-section-title text-term-yellow font-bold uppercase border-b border-white/10 pb-1 inline-block pr-6';
+    titleEl.textContent = title;
+    section.appendChild(titleEl);
+
+    if (meta) {
+        const metaEl = document.createElement('div');
+        metaEl.className = 'terminal-section-meta text-term-fg opacity-60 text-xs mt-2 mb-2';
+        metaEl.innerHTML = meta;
+        section.appendChild(metaEl);
+    }
+
+    const body = document.createElement('div');
+    body.className = 'terminal-section-body space-y-2 text-term-fg';
+    section.appendChild(body);
+
+    if (hint) {
+        const hintEl = document.createElement('div');
+        hintEl.className = 'terminal-section-hint text-term-comment text-xs italic mt-2';
+        hintEl.innerHTML = hint;
+        section.appendChild(hintEl);
+    }
+
+    return { section, body };
 }
 
 // Levenshtein / Did you mean
@@ -332,9 +917,9 @@ inputElem.addEventListener('keydown', (e) => {
             return;
         } else if (e.key === 'Enter') {
             e.preventDefault();
-            const postId = blogPosts[state.blogIndex].id;
+            const postSlug = blogPosts[state.blogIndex].slug;
             state.blogInteractive = false;
-            executeCommandVisual(`read ${postId}`);
+            executeCommandVisual(`read ${postSlug}`);
             return;
         } else if (e.key !== 'Shift' && e.key !== 'Control' && e.key !== 'Meta' && e.key !== 'Alt') {
             state.blogInteractive = false; // abort interactive mode
@@ -457,20 +1042,25 @@ function applyTextNodeAnimation(element, type) {
 
 const commandsStrategy = {
     'help': () => {
-        const tpl = document.getElementById('tpl-cmds').content.cloneNode(true);
-        const container = tpl.querySelector('div');
+        const { section, body } = createTerminalSection({
+            title: t('helpTitle'),
+            meta: t('helpMeta')
+        });
+        const container = document.createElement('div');
+        container.className = 'grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 w-full my-2';
         const map = [
-            {c: 'help', e: '🛟', d: 'Lista todos os comandos'},
-            {c: 'neofetch', e: '🐧', d: 'Informações do sistema/perfil'},
-            {c: 'ls', e: '📂', d: 'Lista o diretório atual'},
-            {c: 'projects', e: '💻', d: 'Portfólio open-source'},
-            {c: 'experience', e: '👔', d: 'Histórico profissional'},
-            {c: 'skills', e: '🛠️', d: 'Matriz de habilidades'},
-            {c: 'blog', e: '📝', d: 'Artigos técnicos'},
-            {c: 'contact', e: '📞', d: 'Minhas redes e conexões'},
-            {c: 'theme', e: '🎨', d: 'Muda cor (dracula, monokai...)'},
-            {c: 'shortcuts', e: '⌨️', d: 'Teclas de atalho'},
-            {c: 'clear', e: '🗑️', d: 'Limpo o console'}
+            {c: 'help', e: '🛟', d: t('helpDesc.help')},
+            {c: 'home', e: '🏠', d: t('helpDesc.home')},
+            {c: 'about', e: '📖', d: t('helpDesc.about')},
+            {c: 'ls', e: '📂', d: t('helpDesc.ls')},
+            {c: 'projects', e: '💻', d: t('helpDesc.projects')},
+            {c: 'experience', e: '👔', d: t('helpDesc.experience')},
+            {c: 'skills', e: '🛠️', d: t('helpDesc.skills')},
+            {c: 'blog', e: '📝', d: t('helpDesc.blog')},
+            {c: 'contact', e: '📞', d: t('helpDesc.contact')},
+            {c: 'theme', e: '🎨', d: t('helpDesc.theme')},
+            {c: 'shortcuts', e: '⌨️', d: t('helpDesc.shortcuts')},
+            {c: 'clear', e: '🗑️', d: t('helpDesc.clear')}
         ];
         map.forEach(item => {
             const elDiv = document.createElement('div');
@@ -479,30 +1069,56 @@ const commandsStrategy = {
             elDiv.innerHTML = `<span class="text-term-yellow w-24">${item.c}</span> <span>${item.e}</span> <span class="text-term-fg opacity-70">${item.d}</span>`;
             container.appendChild(elDiv);
         });
-        outputElem.appendChild(tpl);
+        body.appendChild(container);
+        outputElem.appendChild(section);
     },
     'shortcuts': () => {
-        writeLine('Atalhos de Teclado Disponíveis:', 'text-term-yellow font-bold mt-4 mb-2');
-        
-        const shortcutsMap = [
-            { k: 'ArrowUp', d: 'Carrega o comando anterior do histórico' },
-            { k: 'ArrowDown', d: 'Avança no histórico de comandos' },
-            { k: 'Tab', d: 'Autocompleta o comando sugerido' },
-            { k: 'Ctrl + L', d: 'Limpa a tela do terminal (clear)' },
-            { k: 'Ctrl + C', d: 'Cancela a digitação atual e pula linha' },
-            { k: 'Ctrl + U', d: 'Apaga toda a linha digitada' },
-            { k: 'Ctrl + W', d: 'Apaga a última palavra digitada' }
-        ];
+        const { section, body } = createTerminalSection({
+            title: t('shortcutsTitle'),
+            meta: t('shortcutsMeta')
+        });
+        const shortcutsMap = t('shortcutsMap');
+        const cont = document.createElement('div');
+        cont.className = 'space-y-1';
 
         shortcutsMap.forEach(s => {
-            writeLine(`<span class="text-term-purple font-bold inline-block w-28 text-right pr-4">${s.k}</span> <span class="text-term-fg opacity-70">→ ${s.d}</span>`);
+            const row = document.createElement('div');
+            row.innerHTML = `<span class="text-term-purple font-bold inline-block w-28 text-right pr-4">${s.k}</span> <span class="text-term-fg opacity-70">→ ${s.d}</span>`;
+            cont.appendChild(row);
         });
-        writeLine('<br>');
+        body.appendChild(cont);
+        outputElem.appendChild(section);
     },
+    'about': () => {
+        const { section, body } = createTerminalSection({
+            title: t('aboutTitle'),
+            meta: t('aboutMeta')
+        });
+        const textData = state.language === 'en' ? aboutDataEn : aboutData;
+        textData.forEach(p => {
+            const pElem = document.createElement('p');
+            pElem.textContent = p;
+            pElem.className = 'mb-2 text-term-fg opacity-80 leading-relaxed text-sm sm:text-base';
+            body.appendChild(pElem);
+        });
+        outputElem.appendChild(section);
+    },
+    'sobre': () => commandsStrategy['about'](),
     'clear': () => {
         outputElem.innerHTML = '';
     },
-    'neofetch': () => {
+    'home': async () => {
+        bootControl.canceled = false;
+        await startBootSequence({ replayDeepLink: false });
+    },
+    'neofetch': async () => {
+        await commandsStrategy.home();
+    },
+    'homeSnapshot': () => {
+        const { section, body } = createTerminalSection({
+            title: t('neofetchTitle'),
+            meta: t('neofetchMeta')
+        });
         const tpl = document.getElementById('tpl-neofetch').content.cloneNode(true);
         const art = String.raw`
   _   _     _                      
@@ -545,7 +1161,7 @@ const commandsStrategy = {
         const hd = tpl.querySelector('.host-data');
         const d = profileData;
         const addRow = (k, v, isLink) => {
-            const vk = document.createElement('div'); vk.className = 'text-term-purple font-bold text-right pt-[2px]'; vk.textContent = k;
+            const vk = document.createElement('div'); vk.className = 'text-term-purple font-bold text-left sm:text-right pt-[2px]'; vk.textContent = k;
             const vv = document.createElement('div'); vv.className = 'text-term-fg opacity-80';
             if(isLink) vv.innerHTML = `<a href="${v}" target="_blank" class="hover:underline text-term-blue">${v}</a>`;
             else vv.innerHTML = v;
@@ -582,27 +1198,10 @@ const commandsStrategy = {
             .join('');
         addRow('Stack', stackHTML);
 
-        // Paleta de cores do tema ativo
-        const currentTheme = themesConfig[state.theme];
-        const paletteColors = [
-            { color: currentTheme.bg,     label: 'bg' },
-            { color: currentTheme.fg,     label: 'fg' },
-            { color: currentTheme.green,  label: 'green' },
-            { color: currentTheme.blue,   label: 'blue' },
-            { color: currentTheme.purple, label: 'purple' },
-            { color: currentTheme.yellow, label: 'yellow' },
-        ];
-        const paletteHTML = paletteColors.map(p =>
-            `<span data-palette-key="${p.label}" 
-                   title="Clique para alternar o tema (${p.label})" 
-                   style="background: var(--term-${p.label}); border: 1px solid rgba(255,255,255,0.15);" 
-                   class="inline-block w-5 h-5 rounded-sm mr-1 align-middle cursor-pointer hover:scale-110 active:scale-95 shadow-sm transition-all duration-200"
-                   onclick="const themes=Object.keys(themesConfig); const idx=(themes.indexOf(state.theme)+1)%themes.length; state.theme=themes[idx];"></span>`
-        ).join('');
-        
-        const paletteHeader = `<div class="text-[10px] uppercase opacity-40 mb-1">Active Theme Palette</div>`;
-        const paletteFooter = `<div class="text-[10px] opacity-20 italic mt-1 font-sans">Click on blocks to switch colors</div>`;
-        addRow('Colors', paletteHeader + paletteHTML + paletteFooter);
+        const lastFmBlock = tpl.querySelector('.lastfm-block-container');
+        if (lastFmBlock) {
+            hydrateLastFmBlock(lastFmBlock);
+        }
 
         // Espelhando o efeito do bloco principal no painel secundário 
         if (['typewriter', 'matrix'].includes(chosen)) {
@@ -612,11 +1211,16 @@ const commandsStrategy = {
             hd.classList.add(`anim-${chosen}`);
         }
 
-        outputElem.appendChild(tpl);
+          body.appendChild(tpl);
+          outputElem.appendChild(section);
     },
     'ls': () => {
-         const tpl = document.getElementById('tpl-ls').content.cloneNode(true);
-         const cont = tpl.querySelector('div');
+            const { section, body } = createTerminalSection({
+                title: t('lsTitle'),
+                meta: t('lsMeta')
+            });
+            const cont = document.createElement('div');
+            cont.className = 'flex flex-wrap gap-4 my-2';
          const files = [
             {n:'projects/', t:'d', c:'projects'},
             {n:'skills/', t:'d', c:'skills'},
@@ -631,9 +1235,14 @@ const commandsStrategy = {
              s.onclick = () => executeCommandVisual(f.c);
              cont.appendChild(s);
          });
-         outputElem.appendChild(tpl);
+         body.appendChild(cont);
+         outputElem.appendChild(section);
     },
     'experience': () => {
+        const { section, body } = createTerminalSection({
+            title: t('experienceTitle'),
+            meta: t('experienceMeta')
+        });
         const tpl = document.getElementById('tpl-experience').content.cloneNode(true);
         const cont = tpl.querySelector('.experience-container');
         experiences.forEach(e => {
@@ -648,49 +1257,93 @@ const commandsStrategy = {
             item.innerHTML = html;
             cont.appendChild(item);
         });
-        outputElem.appendChild(tpl);
+        body.appendChild(tpl);
+        outputElem.appendChild(section);
     },
     'projects': () => {
-        const tpl = document.getElementById('tpl-projects').content.cloneNode(true);
-        const cont = tpl.querySelector('.projects-container');
-        projects.forEach(p => {
-            const card = document.createElement('div');
-            card.className = 'border border-white/10 p-4 rounded bg-white/5 flex flex-col justify-between';
-            let tagsHtml = p.tags.map(t => `<span class="rounded-full px-2 py-1 text-[10px] bg-white/10 text-term-fg opacity-70">${t}</span>`).join('');
-            card.innerHTML = `
-                <div>
-                    <a href="${p.link}" target="_blank" class="font-bold text-term-green hover:underline">${p.title}</a>
-                    <p class="text-term-fg opacity-70 mt-2 mb-4 leading-relaxed">${p.description}</p>
-                </div>
-                <div class="flex flex-wrap gap-1 mt-auto shrink-0">${tagsHtml}</div>
-            `;
-            cont.appendChild(card);
+        const { section, body } = createTerminalSection({
+            title: t('projectsTitle'),
+            meta: t('projectsMeta')
         });
-        outputElem.appendChild(tpl);
+        const cont = document.createElement('div');
+        cont.className = 'my-4 space-y-6';
+
+        projects.forEach(p => {
+            const item = document.createElement('div');
+            item.className = 'border-l-2 border-term-purple pl-4 ml-2 space-y-2';
+
+            const stackLine = p.tags.join(' · ');
+            const linkLine = p.link && p.link !== '#'
+                ? `<a href="${p.link}" target="_blank" class="text-term-blue hover:underline">${p.link.replace(/^https?:\/\//, '')}</a>`
+                : '<span class="text-term-fg opacity-50">private / coming soon</span>';
+
+            item.innerHTML = `
+                <div class="font-bold text-term-cyan">${p.title}</div>
+                <div class="text-term-fg opacity-50 font-mono">Stack · ${stackLine}</div>
+                <p class="text-term-fg opacity-80 mt-1">${p.description}</p>
+                <div class="text-term-fg opacity-70 mt-2">> Link: ${linkLine}</div>
+            `;
+
+            cont.appendChild(item);
+        });
+
+        body.appendChild(cont);
+        outputElem.appendChild(section);
     },
-    'skills': () => {
-        const tpl = document.getElementById('tpl-skills').content.cloneNode(true);
-        const cont = tpl.querySelector('.skills-container');
+    'skills': async () => {
+        const { section, body } = createTerminalSection({
+            title: 'Skills',
+            meta: t('skillsMeta')
+        });
+        const cont = document.createElement('div');
+        cont.className = 'space-y-4';
+        const skillsToAnimate = [];
+        
         skills.forEach(c => {
             const block = document.createElement('div');
-            let h = `<div class="text-term-yellow font-bold mb-2 uppercase border-b border-white/10 pb-1 inline-block">${c.category}</div><div class="space-y-1">`;
+            let h = `<div class="text-term-cyan font-bold mb-3 uppercase border-b border-white/10 pb-1 inline-block pr-6">${c.category}</div><div class="space-y-1">`;
             c.skills.forEach(s => {
-                const bar = '█'.repeat(s.level) + '░'.repeat(10 - s.level);
-                h += `<div class="flex justify-between max-w-sm">
-                        <span class="text-term-fg opacity-80">${s.name}</span>
-                        <span class="text-term-blue font-mono">[${bar}] ${s.level}/10</span>
+                const skillId = `skill-${Math.random().toString(36).substr(2, 9)}`;
+                h += `<div class="w-full sm:w-1/2 mb-1">
+                        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-1">
+                            <span class="text-term-fg opacity-80 text-sm whitespace-nowrap overflow-hidden text-ellipsis pr-2">${s.name}</span>
+                            <span class="text-term-green font-mono text-[10px] sm:text-xs shrink-0" id="${skillId}">
+                                <span class="hidden sm:inline">[</span><span class="tracking-widest">░░░░░░░░░░</span><span class="hidden sm:inline">] 0/10</span>
+                                <span class="sm:hidden ml-1 text-xs">0/10</span>
+                            </span>
+                        </div>
                       </div>`;
+                skillsToAnimate.push({ id: skillId, level: s.level });
             });
             h += `</div>`;
             block.innerHTML = h;
             cont.appendChild(block);
         });
-        outputElem.appendChild(tpl);
+        
+        body.appendChild(cont);
+        outputElem.appendChild(section);
+        
+        // Animate each skill bar progressively
+        for (let skillItem of skillsToAnimate) {
+            const elem = document.getElementById(skillItem.id);
+            if (!elem) continue;
+            
+            const targetLevel = skillItem.level;
+            for (let i = 0; i <= targetLevel; i++) {
+                const bar = '█'.repeat(i) + '░'.repeat(10 - i);
+                elem.innerHTML = `<span class="hidden sm:inline">[</span><span class="tracking-widest">${bar}</span><span class="hidden sm:inline">] ${i}/10</span><span class="sm:hidden ml-1 text-xs">${i}/10</span>`;
+                await sleep(25);
+            }
+        }
     },
     'blog': () => {
-        const tpl = document.getElementById('tpl-blog-list').content.cloneNode(true);
-        const cont = tpl.querySelector('.blog-container');
-        const dFormat = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'medium' });
+        const { section, body } = createTerminalSection({
+            title: t('blogTitle'),
+            meta: t('blogMeta'),
+            hint: t('blogHint')
+        });
+        const cont = document.createElement('div');
+        cont.className = 'space-y-2';
         
         state.blogInteractive = true;
         state.blogIndex = 0;
@@ -705,66 +1358,111 @@ const commandsStrategy = {
                  row.className = `cursor-pointer transition-colors p-2 rounded flex items-center gap-4 border ${isSel ? 'bg-white/10 border-white/20 scale-[1.01]' : 'bg-transparent border-transparent hover:bg-white/5'} transform`;
                  
                  row.innerHTML = `<span class="${isSel ? 'text-term-green' : 'text-term-yellow'} w-8 shrink-0 font-bold">${isSel ? '▶' : '#'} ${p.id}</span>
-                                  <span class="text-term-comment text-xs shrink-0 w-24">${dFormat.format(dateReal)}</span>
+                                  <span class="text-term-comment text-xs shrink-0 w-24">${formatDisplayDate(dateReal)}</span>
                                   <span class="${isSel ? 'text-term-green font-bold' : 'text-term-fg opacity-80'} truncate">${p.title}</span>`;
                  
                  row.onclick = () => {
                      state.blogInteractive = false;
-                     executeCommandVisual(`read ${p.id}`);
+                     executeCommandVisual(`read ${p.slug}`);
                  };
                  cont.appendChild(row);
             });
             const hint = document.createElement('div');
             hint.className = 'text-term-comment text-xs italic mt-2 ml-2 animate-pulse';
-            hint.textContent = "↓ Dica: Use as setas (CIMA/BAIXO) para navegar e ENTER para ler o post selecionado.";
+            hint.textContent = `↓ ${t('blogNavHint')}`;
             cont.appendChild(hint);
         };
         
         state.updateBlogList = renderList;
         renderList();
-        outputElem.appendChild(tpl);
+        body.appendChild(cont);
+        outputElem.appendChild(section);
     },
     'contact': () => {
-        const tpl = document.getElementById('tpl-contact').content.cloneNode(true);
-        const cont = tpl.querySelector('.contact-container');
-        contacts.forEach(c => {
-             cont.innerHTML += `<div class="text-right pr-2 text-term-cyan">${c.icon} ${c.platform}</div>`;
-             cont.innerHTML += `<div><a href="${c.link}" target="_blank" class="hover:underline text-term-fg opacity-80 hover:text-term-green hover:opacity-100">${c.display}</a></div>`;
+        const { section, body } = createTerminalSection({
+            title: t('contactTitle'),
+            meta: t('contactMeta')
         });
-        outputElem.appendChild(tpl);
+        const cont = document.createElement('div');
+        cont.className = 'my-2 space-y-2';
+        contacts.forEach(c => {
+            const row = document.createElement('div');
+            row.className = 'grid grid-cols-1 sm:grid-cols-[110px_1fr] gap-1 sm:gap-2 border-l-2 border-term-purple/60 pl-3 py-1';
+
+            const label = document.createElement('div');
+            label.className = 'text-term-cyan sm:text-right sm:pr-2 text-sm font-mono';
+            label.textContent = `${c.icon} ${c.platform}`;
+
+            const value = document.createElement('div');
+            const link = document.createElement('a');
+            link.href = c.link;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            link.className = 'hover:underline text-term-fg opacity-80 hover:text-term-green hover:opacity-100 break-all';
+            link.textContent = c.display;
+
+            value.appendChild(link);
+            row.appendChild(label);
+            row.appendChild(value);
+            cont.appendChild(row);
+        });
+        body.appendChild(cont);
+        outputElem.appendChild(section);
     },
     'read': (args) => {
         if(!args || args.length === 0) {
-            writeLine('Bash: read: Esperava o argumento <id>', 'text-term-red font-bold');
+            writeLine(t('readArgError'), 'text-term-red font-bold');
             return;
         }
-        const pId = parseInt(args[0]);
-        const post = blogPosts.find(p => p.id === pId);
+        const slug = args[0];
+        const post = blogPosts.find(p => p.slug === slug);
         if(!post) {
-            writeLine(`Bash: read: Artigo com ID '${args[0]}' não encontrado.`, 'text-term-red font-bold');
+            writeLine(t('readNotFound', { slug: args[0] }), 'text-term-red font-bold');
             return;
         }
-        const tpl = document.getElementById('tpl-post').content.cloneNode(true);
-        tpl.querySelector('.title-el').innerHTML = post.title;
-        tpl.querySelector('.tags-el').innerHTML = post.tags.map(t => `<span class="bg-term-purple/20 text-term-purple px-2 py-0.5 rounded">${t}</span>`).join('');
-        tpl.querySelector('.content-el').innerHTML = post.content;
-        tpl.querySelector('.btn-back').onclick = () => executeCommandVisual('blog');
-        outputElem.appendChild(tpl);
+        const { section, body } = createTerminalSection({
+            title: post.title,
+            meta: `<span>${formatDisplayDate(post.date)}</span><span class="opacity-40">|</span><span>${t('readAuthor')}: Thierry Rene Matos</span>`,
+            hint: t('readHint')
+        });
+
+        const tagsEl = document.createElement('div');
+        tagsEl.className = 'flex gap-2 mb-3 text-xs';
+        tagsEl.innerHTML = post.tags.map(tag => `<span class="bg-term-purple/20 text-term-purple px-2 py-0.5 rounded">${tag}</span>`).join('');
+
+        const contentEl = document.createElement('div');
+        contentEl.className = 'leading-relaxed text-term-fg opacity-80 text-sm sm:text-base mb-4';
+        contentEl.innerHTML = post.content;
+
+        const backBtn = document.createElement('button');
+        backBtn.className = 'px-4 py-2 bg-white/10 hover:bg-white/20 rounded font-mono text-xs transition-colors text-term-fg';
+        backBtn.textContent = t('readBack');
+        backBtn.onclick = () => executeCommandVisual('blog');
+
+        body.appendChild(tagsEl);
+        body.appendChild(contentEl);
+        body.appendChild(backBtn);
+        outputElem.appendChild(section);
     },
     'theme': (args) => {
+        const families = getThemeFamilies();
         if(!args || args.length === 0) {
-            writeLine(`Temas suportados: ${Object.keys(themesConfig).join(', ')}. Uso: theme <nome>`, 'text-term-fg opacity-70');
+            writeLine(t('themeSupported', { themes: families.join(', ') }), 'text-term-fg opacity-70');
             return;
         }
-        const t = args[0].toLowerCase();
-        if(!themesConfig[t]) {
-            const best = getClosestMatch(t, Object.keys(themesConfig));
-            let out = `Tema '${t}' não localizado.`;
-            if(best) out += ` Você quis dizer '${best}'?`;
+
+        const requested = args[0].toLowerCase();
+        const themeFamily = getThemeFamily(requested);
+
+        if(!families.includes(themeFamily)) {
+            const best = getClosestMatch(themeFamily, families);
+            let out = t('themeNotFound', { theme: requested });
+            if(best) out += t('didYouMean', { suggestion: best });
             writeLine(out, 'text-term-red');
         } else {
-            state.theme = t;
-            writeLine(`Tema ativado: ${t}`, 'text-term-green');
+            const nextTheme = isLightTheme(state.theme) ? `${themeFamily}-light` : themeFamily;
+            state.theme = themesConfig[nextTheme] ? nextTheme : themeFamily;
+            writeLine(t('themeActivated', { theme: themeFamily }), 'text-term-green');
         }
     }
 };
@@ -772,6 +1470,7 @@ const commandsStrategy = {
 function processCommand(raw) {
     const parts = raw.split(' ').filter(p => p.trim());
     const cmd = parts[0].toLowerCase();
+    const normalizedCmd = resolveCommandName(cmd);
     const args = parts.slice(1);
 
     if(cmd.startsWith('sudo')) {
@@ -779,20 +1478,23 @@ function processCommand(raw) {
         return;
     }
 
-    if(commandsStrategy[cmd]) {
+    if(commandsStrategy[normalizedCmd]) {
         // Track analytics and update URL for meaningful content commands
-        const trackable = ['blog', 'projects', 'skills', 'experience', 'contact', 'help', 'neofetch', 'shortcuts', 'theme'];
-        if (trackable.includes(cmd)) {
-            if (window.location.hash !== `#${cmd}`) {
-                history.pushState(null, null, `#${cmd}`);
+        const trackable = ['blog', 'projects', 'skills', 'experience', 'contact', 'help', 'home', 'about', 'shortcuts', 'theme'];
+        const trackableWithArgs = ['read'];
+        const routePath = getRouteForCommand(normalizedCmd, args);
+        if (trackable.includes(normalizedCmd) || trackableWithArgs.includes(normalizedCmd)) {
+            const currentRoute = `${window.location.pathname}${window.location.hash}`;
+            if (currentRoute !== routePath) {
+                history.pushState(null, null, routePath);
             }
-            trackCommand(cmd);
+            trackCommand(normalizedCmd, routePath);
         }
         
-        commandsStrategy[cmd](args);
+        commandsStrategy[normalizedCmd](args);
     } else {
-        const suggestion = getClosestMatch(cmd, availableCommands);
-        let msg = `bash: ${cmd}: command not found.`;
+        const suggestion = getClosestMatch(normalizedCmd, availableCommands);
+        let msg = `bash: ${normalizedCmd}: command not found.`;
         if (suggestion) {
             msg += ` Did you mean '${suggestion}'?`;
         }
@@ -811,7 +1513,10 @@ const abortBoot = () => { bootControl.canceled = true; };
 window.addEventListener('keydown', abortBoot, {once:true});
 window.addEventListener('click', abortBoot, {once:true});
 
-async function startBootSequence() {
+async function startBootSequence({ replayDeepLink = true } = {}) {
+    state.blogInteractive = false;
+    state.blogIndex = 0;
+
     const lines = [
         "Initializing BIOS Configuration... [ OK ]",
         "Loading CPU Microcode Updates... [ OK ]",
@@ -821,6 +1526,7 @@ async function startBootSequence() {
         "Starting FrankenPHP/Octane Daemon... [ OK ]",
         "Initializing Tailwind JIT Engine... [ OK ]",
         "Loading Matrix Weights & AI Subroutines... [ OK ]",
+        "Fetching Last.fm API Data... [ OK ]",
         "Reached target Graphical Interface... [ OK ]"
     ];
     
@@ -847,11 +1553,13 @@ async function startBootSequence() {
     }
     
     commandsStrategy.clear();
-    commandsStrategy.neofetch();
-    writeLine("<i>Ambiente pronto. Digite 'help' para iniciar.</i>", "text-term-fg opacity-40 text-xs sm:text-sm my-4");
+    commandsStrategy.homeSnapshot();
+    writeLine(t('bootReady'), "text-term-fg opacity-40 text-xs sm:text-sm my-4");
     
     // Suporte a Deep Linking (executa comando se houver hash na URL)
-    handleDeepLink();
+    if (replayDeepLink) {
+        handleDeepLink({ excludedCommands: ['home'] });
+    }
     
     // Remove cancel listeners so real clicks work
     window.removeEventListener('keydown', abortBoot);

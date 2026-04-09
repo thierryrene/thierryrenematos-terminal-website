@@ -64,3 +64,46 @@ terminal-output::-webkit-scrollbar-thumb { background: var(--term-purple); borde
 terminal-window, .mac-window, .win-header, quick-actions {
   transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
+
+/* Shared output contract for command sections */
+.terminal-section {
+  width: 100%;
+}
+
+.terminal-section-title,
+.terminal-section-meta,
+.terminal-section-body,
+.terminal-section-hint {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+}
+
+.control-btn {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.18);
+  color: var(--term-fg);
+  font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  font-size: 10px;
+  line-height: 1;
+  padding: 5px 8px;
+  border-radius: 4px;
+  min-width: 54px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+}
+
+.control-btn:hover {
+  border-color: var(--term-green);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.control-btn:active {
+  transform: translateY(1px);
+}
+
+.control-btn:focus-visible {
+  outline: 1px solid var(--term-blue);
+  outline-offset: 1px;
+}
+
+
