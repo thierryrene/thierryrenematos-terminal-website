@@ -195,31 +195,6 @@
     }
   </script>
 
-  <script>
-    window.__ENV_READY__ = (async () => {
-      try {
-        const response = await fetch('.env', { cache: 'no-store' });
-        if (!response.ok) return;
-
-        const text = await response.text();
-        const pairs = text.split('\n');
-        for (const raw of pairs) {
-          const line = raw.trim();
-          if (!line || line.startsWith('#')) continue;
-          const idx = line.indexOf('=');
-          if (idx <= 0) continue;
-
-          const key = line.slice(0, idx).trim();
-          const value = line.slice(idx + 1).trim().replace(/^['"]|['"]$/g, '');
-          if (key === 'LASTFM_API_KEY') window.__LASTFM_API_KEY__ = value;
-          if (key === 'LASTFM_USERNAME') window.__LASTFM_USER__ = value;
-        }
-      } catch {
-        // Keep silent fallback: Last.fm block will render unavailable state.
-      }
-    })();
-  </script>
-
   <!-- SCRIPT BUNDLE (ESM, Reatividade, Lógica de Comandos) -->
   <script type="module" src="main.js"></script>
 </body>

@@ -19,8 +19,8 @@ const lastFmEndpoint = 'https://ws.audioscrobbler.com/2.0/';
 function getLastFmConfig() {
     return {
         endpoint: lastFmEndpoint,
-        user: String(window.__LASTFM_USER__ || 'thierryrenematos').trim(),
-        apiKey: String(window.__LASTFM_API_KEY__ || '').trim()
+        user: 'robotstxts', // Todo: reverter para process.env.LASTFM_USERNAME futuramente
+        apiKey: 'ffb3ce347a2aa289d15ae854f79e1184' // Todo: reverter para process.env.LASTFM_API_KEY futuramente
     };
 }
 
@@ -406,10 +406,6 @@ function pickLastFmImage(images = []) {
 }
 
 async function fetchLastFmRecentTrack() {
-    if (window.__ENV_READY__) {
-        try { await window.__ENV_READY__; } catch {}
-    }
-
     const lastFmConfig = getLastFmConfig();
     if (!lastFmConfig.apiKey || !lastFmConfig.user) return { unavailable: true };
 
