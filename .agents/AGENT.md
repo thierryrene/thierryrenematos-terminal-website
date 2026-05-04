@@ -26,3 +26,24 @@ O agente está expressamente proibido de introduzir as seguintes tecnologias nes
 A base de dados (variáveis `profileData`, `experiences`, `skills`, etc.) agora reflete informações **verídicas extraídas do LinkedIn**. Ao adicionar dados, utilize estritamente o `main.js`. Nunca subcreva com dados genéricos que fujam da carreira original documentada no arquivo.
 
 Lembrete Proativo: Ao lidar com pedidos de feature novos do usuário, pense e proponha soluções via HTML/JS cru (ex: *IntersectionObserver*, *Intl*, *MutationObserver*) em vez de procurar bibliotecas utilitárias externas.
+
+## 🧾 Workflow de Commits (REGRA INEGOCIÁVEL)
+
+**Sempre separar commits por tópico tratado.** Cada commit deve cobrir uma unidade lógica única e isolada (ex: "remove light theme", "remove Ctrl+R", "fix Last.fm cache"). Nunca empacotar mudanças não-relacionadas no mesmo commit, mesmo que tenham sido feitas na mesma sessão.
+
+### Aplicação prática
+- Antes de chamar `git commit`, identificar todos os tópicos lógicos modificados no working tree.
+- Se houver múltiplos tópicos, dividir em commits sequenciais — usar `git add <arquivos>` seletivo, ou (quando os tópicos compartilham arquivos) reaplicar/desfazer trechos no working tree para isolar o diff de cada commit.
+- Mensagem de commit segue padrão Conventional Commits (`feat:`, `fix:`, `refactor:`, `chore:`, `style:`, `docs:`, `perf:`) com escopo opcional, descrição curta no título e corpo explicando o "porquê" quando relevante.
+- Co-author trailer obrigatório quando o commit foi gerado por agente de IA.
+- **Nunca** comitar sem pedido explícito do usuário. Quando o usuário pedir "commit e push", auditar o diff e propor a separação por tópicos antes de executar.
+
+### Exemplo
+```
+[main 56643f4] refactor: drop light theme variants
+[main 511a1f6] refactor: remove Ctrl+R reverse-search
+```
+Em vez de:
+```
+[main xxxxxxx] refactor: cleanup (light theme + Ctrl+R)   ❌
+```
