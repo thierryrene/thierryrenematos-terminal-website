@@ -899,55 +899,6 @@ inputElem.addEventListener('input', () => {
     }
 });
 
-// Reverse-search (Ctrl+R) state
-let reverseSearchActive = false;
-let reverseSearchQuery = '';
-let reverseSearchMatch = '';
-let reverseSearchBar = null;
-
-function openReverseSearch() {
-    if (reverseSearchActive) return;
-    reverseSearchActive = true;
-    reverseSearchQuery = '';
-    reverseSearchMatch = '';
-    reverseSearchBar = document.createElement('div');
-    reverseSearchBar.className = 'reverse-search-bar';
-    reverseSearchBar.textContent = '(reverse-i-search)`\': ';
-    outputElem.parentElement.insertBefore(reverseSearchBar, outputElem.nextSibling);
-}
-
-function updateReverseSearch() {
-    const q = reverseSearchQuery;
-    let match = '';
-    for (let i = state.history.length - 1; i >= 0; i--) {
-        if (state.history[i].includes(q)) { match = state.history[i]; break; }
-    }
-    reverseSearchMatch = match;
-    if (reverseSearchBar) {
-        reverseSearchBar.textContent = `(reverse-i-search)\`${q}\': ${match}`;
-    }
-    inputElem.value = match;
-    inputElem.dispatchEvent(new Event('input'));
-}
-
-function closeReverseSearch() {
-    reverseSearchActive = false;
-    reverseSearchQuery = '';
-    if (reverseSearchBar && reverseSearchBar.parentElement) {
-        reverseSearchBar.parentElement.removeChild(reverseSearchBar);
-    }
-    reverseSearchBar = null;
-}
-
-function commitReverseSearch() {
-    closeReverseSearch();
-    // Re-dispatch Enter so the existing handler picks it up next tick
-    setTimeout(() => {
-        const ev = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true });
-        inputElem.dispatchEvent(ev);
-    }, 0);
-}
-
 // Tab cycle bookkeeping
 let tabCycleMatches = [];
 let tabCycleIndex = 0;
@@ -961,19 +912,6 @@ function resetTabCycle() {
 
 // History and Keys
 inputElem.addEventListener('keydown', (e) => {
-    // Reverse search interception
-    if (reverseSearchActive) {
-        if (e.key === 'Escape') { e.preventDefault(); closeReverseSearch(); inputElem.value = ''; inputElem.dispatchEvent(new Event('input')); return; }
-        if (e.key === 'Backspace') { e.preventDefault(); reverseSearchQuery = reverseSearchQuery.slice(0, -1); updateReverseSearch(); return; }
-        if (e.key === 'Enter') { /* handled below */ }
-        else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
-            e.preventDefault();
-            reverseSearchQuery += e.key;
-            updateReverseSearch();
-            return;
-        }
-    }
-
     // Linux Native Shortcuts
     if (e.ctrlKey) {
         const k = e.key.toLowerCase();
@@ -983,7 +921,6 @@ inputElem.addEventListener('keydown', (e) => {
             return;
         } else if (k === 'c') { // Cancel line
             e.preventDefault();
-            if (reverseSearchActive) closeReverseSearch();
             writeLine(`${renderPromptHTML(inputElem.value)}^C`);
             inputElem.value = '';
             inputElem.dispatchEvent(new Event('input'));
@@ -999,10 +936,6 @@ inputElem.addEventListener('keydown', (e) => {
             words.pop();
             inputElem.value = words.join(' ') + (words.length > 0 ? ' ' : '');
             inputElem.dispatchEvent(new Event('input'));
-            return;
-        } else if (k === 'r') { // Reverse search
-            e.preventDefault();
-            openReverseSearch();
             return;
         }
     }
@@ -1033,7 +966,6 @@ inputElem.addEventListener('keydown', (e) => {
             return;
         }
     } else if (e.key === 'Enter') {
-        if (reverseSearchActive) { commitReverseSearch(); return; }
         const raw = inputElem.value.trim();
         inputElem.value = '';
         ghostElem.textContent = '';

@@ -118,16 +118,6 @@ terminal-window, .mac-window, .win-header, quick-actions {
 /* Output cursor hint: reinforces selectable content */
 terminal-output { cursor: text; }
 
-/* Reverse-search overlay */
-.reverse-search-bar {
-  font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
-  font-size: 12px;
-  color: var(--term-yellow);
-  padding: 4px 8px;
-  border-top: 1px dashed rgba(255, 255, 255, 0.15);
-  background: rgba(0, 0, 0, 0.25);
-}
-
 /* Boot skip hint */
 .boot-skip-hint {
   position: absolute;
