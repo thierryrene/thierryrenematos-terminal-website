@@ -48,24 +48,91 @@
   </script>
   <link rel="stylesheet" href="style.css">
 
-  <!-- GA4 Placeholder -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <!-- FOUC guard: apply persisted theme bg before paint -->
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('terminal_theme');
+        var darkMatch = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (!t) t = darkMatch ? 'dracula' : 'dracula-light';
+        var bgs = {
+          'dracula': '#282a36', 'dracula-light': '#f8f8f2',
+          'monokai': '#272822', 'monokai-light': '#fafafa'
+        };
+        var bg = bgs[t] || '#282a36';
+        var isLight = t.endsWith('-light');
+        var fg = isLight ? '#282a36' : '#f8f8f2';
+        document.documentElement.style.setProperty('--term-bg', bg);
+        document.documentElement.style.setProperty('--term-fg', fg);
+        document.documentElement.setAttribute('data-theme-mode', isLight ? 'light' : 'dark');
+      } catch (e) { /* ignore */ }
+    })();
+  </script>
+
+  <!-- JSON-LD: Person schema -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "Thierry Rene Matos",
+    "url": "https://thierryrenematos.tec.br/",
+    "jobTitle": "Senior Web Developer",
+    "knowsAbout": ["PHP", "Python", "JavaScript", "Laravel", "Vue.js", "React.js", "AWS"],
+    "worksFor": { "@type": "Organization", "name": "Steal The Look", "url": "https://stealthelook.com.br" },
+    "sameAs": [
+      "https://github.com/thierryrene",
+      "https://linkedin.com/in/thierryrene",
+      "https://instagram.com/thierryrenematos"
+    ]
+  }
+  </script>
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-7DYM4FGFHY"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
-    function gtag() { dataLayer.push(arguments); }
+    function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-    gtag('config', 'G-XXXXXXXXXX');
+
+    gtag('config', 'G-7DYM4FGFHY');
   </script>
 </head>
 
 <body class="flex items-center justify-center min-h-screen p-0 sm:p-8 bg-gradient-to-br from-slate-900 to-black relative">
+
+  <style>
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;}
+  </style>
+
+  <noscript>
+    <div style="max-width:760px;margin:32px auto;padding:24px;color:#f8f8f2;background:#282a36;border-radius:8px;font-family:system-ui,sans-serif;line-height:1.6;">
+      <h1>Thierry Rene Matos &mdash; Senior Web Developer</h1>
+      <p>Portfolio interativo formato terminal. Este site requer JavaScript para a experiencia completa. Conteudo abaixo serve como fallback estatico.</p>
+      <h2>Sobre</h2>
+      <p>Mais de 15 anos em desenvolvimento web. Atualmente Senior Web Developer no Steal The Look, focado em performance, SEO, AWS e arquiteturas escalaveis em PHP/Python/JavaScript.</p>
+      <h2>Stack</h2>
+      <p>PHP, Laravel, Python, JavaScript, Vue.js, React.js, AWS, PostgreSQL, Redis, FrankenPHP/Octane, Docker.</p>
+      <h2>Experiencia</h2>
+      <ul>
+        <li><strong>Senior Web Developer</strong> &mdash; Steal The Look (Set/2016 &ndash; presente)</li>
+        <li><strong>Senior Web Developer (Freelance)</strong> &mdash; Jan/2009 &ndash; presente</li>
+        <li><strong>Analista de Suporte Tecnico</strong> &mdash; Sonda IT (2013 &ndash; 2016)</li>
+      </ul>
+      <h2>Contato</h2>
+      <ul>
+        <li>Email: <a href="mailto:thierryrenesantosmatos+website@gmail.com">thierryrenesantosmatos+website@gmail.com</a></li>
+        <li>GitHub: <a href="https://github.com/thierryrene">github.com/thierryrene</a></li>
+        <li>LinkedIn: <a href="https://linkedin.com/in/thierryrene">linkedin.com/in/thierryrene</a></li>
+      </ul>
+    </div>
+  </noscript>
 
   <!-- Particles Background (Desktop Only) -->
   <div id="particles-js" class="absolute inset-0 z-0 hidden sm:block"></div>
 
   <!-- macOS Style Window Wrapper -->
   <div
-    class="mac-window w-full h-[100dvh] sm:w-[75vw] sm:max-w-7xl sm:h-[85vh] flex flex-col bg-gray-900 rounded-none sm:rounded-xl overflow-hidden relative z-10 shadow-2xl">
+    class="mac-window w-full h-[100dvh] sm:w-[75vw] sm:max-w-7xl sm:h-[85vh] flex flex-col bg-term-bg rounded-none sm:rounded-xl overflow-hidden relative z-10 shadow-2xl">
 
     <!-- Window Header -->
     <div class="win-header h-10 bg-slate-800 flex items-center px-4 shrink-0 z-10 border-b border-white/5 relative transition-colors duration-300">
@@ -76,8 +143,8 @@
       </div>
       <div class="flex-1 text-center font-mono text-xs text-term-fg opacity-40">thierry@thierryrenematos.tec.br — zsh</div>
       <div id="layout-controls" class="absolute right-4 flex items-center gap-2">
-        <button id="lang-toggle-btn" type="button" class="control-btn" aria-label="Switch language" title="Switch language">PT-BR</button>
-        <button id="mode-toggle-btn" type="button" class="control-btn" aria-label="Toggle dark or light theme" title="Toggle dark or light theme">Dark</button>
+        <button id="lang-toggle-btn" type="button" class="control-btn" aria-label="Switch language" aria-pressed="false" title="Switch language">PT-BR</button>
+        <button id="mode-toggle-btn" type="button" class="control-btn" aria-label="Toggle dark or light theme" aria-pressed="false" title="Toggle dark or light theme">Dark</button>
       </div>
     </div>
 
@@ -86,7 +153,7 @@
       class="flex-1 relative flex flex-col bg-term-bg text-term-fg term-font text-sm sm:text-base overflow-hidden">
 
       <!-- Output Container -->
-      <terminal-output id="output" class="flex-1 overflow-y-auto p-4 pb-2 scroll-smooth block" aria-live="polite"
+      <terminal-output id="output" class="flex-1 overflow-y-auto p-4 pb-2 scroll-smooth block" aria-live="off"
         aria-relevant="additions text"></terminal-output>
 
       <!-- Prompt Component -->
@@ -96,9 +163,11 @@
         </span>
         <div class="relative flex-1 flex items-center">
           <span id="ghost-text" class="absolute pointer-events-none text-term-fg opacity-25 whitespace-pre"></span>
+          <label for="cmd-input" class="sr-only">Terminal command input</label>
           <input type="text" id="cmd-input"
             class="w-full bg-transparent border-none outline-none text-term-fg caret-term-purple z-10 font-bold"
-            autocomplete="off" spellcheck="false" title="Command">
+            autocomplete="off" spellcheck="false" autocapitalize="off" autocorrect="off"
+            aria-label="Terminal command input" title="Command">
         </div>
       </terminal-prompt>
 
@@ -173,26 +242,35 @@
   </template>
 
   <!-- ParticlesJS Library -->
-  <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js" defer></script>
   <script>
-    if (window.innerWidth >= 640) {
-      particlesJS("particles-js", {
-        "particles": {
-          "number": {"value": 80, "density": {"enable": true, "value_area": 800}},
-          "color": {"value": ["#50fa7b", "#8be9fd", "#bd93f9", "#f1fa8c", "#ff79c6", "#ffb86c", "#ff5555"]},
-          "opacity": {"value": 0.4, "random": true},
-          "size": {"value": 4, "random": true},
-          "line_linked": {"enable": true, "distance": 130, "color": "#ffffff", "opacity": 0.15, "width": 1},
-          "move": {"enable": true, "speed": 1.5}
-        },
-        "interactivity": {
-          "detect_on": "canvas",
-          "events": {"onhover": {"enable": true, "mode": "grab"}, "onclick": {"enable": true, "mode": "push"}},
-          "modes": {"grab": {"distance": 140, "line_linked": {"opacity": 0.4}}}
-        },
-        "retina_detect": true
-      });
-    }
+    (function () {
+      var prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (prefersReduced || window.innerWidth < 640) return;
+
+      function init() {
+        if (typeof particlesJS !== 'function') return;
+        particlesJS("particles-js", {
+          "particles": {
+            "number": {"value": 40, "density": {"enable": true, "value_area": 900}},
+            "color": {"value": ["#50fa7b", "#8be9fd", "#bd93f9", "#f1fa8c", "#ff79c6", "#ffb86c", "#ff5555"]},
+            "opacity": {"value": 0.35, "random": true},
+            "size": {"value": 3, "random": true},
+            "line_linked": {"enable": true, "distance": 140, "color": "#ffffff", "opacity": 0.12, "width": 1},
+            "move": {"enable": true, "speed": 1.2}
+          },
+          "interactivity": {
+            "detect_on": "canvas",
+            "events": {"onhover": {"enable": true, "mode": "grab"}, "onclick": {"enable": true, "mode": "push"}},
+            "modes": {"grab": {"distance": 140, "line_linked": {"opacity": 0.35}}}
+          },
+          "retina_detect": true
+        });
+      }
+
+      if (document.readyState === 'complete') init();
+      else window.addEventListener('load', init, { once: true });
+    })();
   </script>
 
   <!-- SCRIPT BUNDLE (ESM, Reatividade, Lógica de Comandos) -->

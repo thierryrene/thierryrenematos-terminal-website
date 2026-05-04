@@ -194,6 +194,7 @@ const i18n = {
             blog: 'Artigos tecnicos',
             contact: 'Minhas redes e conexoes',
             theme: 'Muda cor (dracula, monokai...)',
+            mode: 'Alterna dark/light (mode dark|light)',
             shortcuts: 'Teclas de atalho',
             clear: 'Limpa o console'
         },
@@ -221,6 +222,10 @@ const i18n = {
         lastFmUnknownAlbum: 'Album desconhecido',
         lastFmArtistLink: 'Artista no Last.fm',
         lastFmAlbumLink: 'Album no Last.fm',
+        lastFmRetry: 'Tentar novamente',
+        modeCurrent: 'Modo atual: {mode}. Use mode dark ou mode light.',
+        modeInvalid: 'Modo invalido. Use mode dark ou mode light.',
+        modeActivated: 'Modo {mode} ativado.',
         lsTitle: 'Directory Listing',
         lsMeta: 'Itens navegaveis do portfolio no contexto atual.',
         experienceTitle: 'Experiencia',
@@ -250,6 +255,7 @@ const i18n = {
         didYouMean: " Voce quis dizer '{suggestion}'?",
         themeActivated: 'Tema ativado: {theme}',
         bootReady: "<i>Ambiente pronto. Digite 'help' para iniciar.</i>",
+        bootSkipHint: 'pressione qualquer tecla para pular',
         langButton: 'PT-BR',
         langButtonTitle: 'Alternar idioma',
         modeDark: 'Dark',
@@ -272,6 +278,7 @@ const i18n = {
             blog: 'Technical articles',
             contact: 'My networks and connections',
             theme: 'Change colors (dracula, monokai...)',
+            mode: 'Toggle dark/light (mode dark|light)',
             shortcuts: 'Keyboard shortcuts',
             clear: 'Clear console'
         },
@@ -299,6 +306,10 @@ const i18n = {
         lastFmUnknownAlbum: 'Unknown album',
         lastFmArtistLink: 'Artist on Last.fm',
         lastFmAlbumLink: 'Album on Last.fm',
+        lastFmRetry: 'Retry',
+        modeCurrent: 'Current mode: {mode}. Use mode dark or mode light.',
+        modeInvalid: 'Invalid mode. Use mode dark or mode light.',
+        modeActivated: 'Mode {mode} activated.',
         lsTitle: 'Directory Listing',
         lsMeta: 'Navigable portfolio items in current context.',
         experienceTitle: 'Experience',
@@ -328,6 +339,7 @@ const i18n = {
         didYouMean: " Did you mean '{suggestion}'?",
         themeActivated: 'Theme activated: {theme}',
         bootReady: "<i>Environment ready. Type 'help' to start.</i>",
+        bootSkipHint: 'press any key to skip',
         langButton: 'EN',
         langButtonTitle: 'Switch language',
         modeDark: 'Dark',
@@ -405,7 +417,13 @@ function pickLastFmImage(images = []) {
     return '';
 }
 
+const lastFmCache = { data: null, ts: 0, ttl: 60_000 };
+
 async function fetchLastFmRecentTrack() {
+    if (lastFmCache.data && Date.now() - lastFmCache.ts < lastFmCache.ttl) {
+        return lastFmCache.data;
+    }
+
     const lastFmConfig = getLastFmConfig();
     if (!lastFmConfig.apiKey || !lastFmConfig.user) return { unavailable: true };
 
@@ -431,14 +449,18 @@ async function fetchLastFmRecentTrack() {
             ? payload.recenttracks.track[0]
             : payload?.recenttracks?.track;
 
-        if (!rawTrack) return { empty: true };
+        if (!rawTrack) {
+            lastFmCache.data = { empty: true };
+            lastFmCache.ts = Date.now();
+            return lastFmCache.data;
+        }
 
         const artistName = rawTrack?.artist?.['#text'] || rawTrack?.artist?.name || t('lastFmUnknownArtist');
         const albumName = rawTrack?.album?.['#text'] || t('lastFmUnknownAlbum');
         const trackName = rawTrack?.name || t('lastFmUnknownTrack');
         const isNowPlaying = rawTrack?.['@attr']?.nowplaying === 'true';
 
-        return {
+        const result = {
             isNowPlaying,
             trackName,
             artistName,
@@ -447,8 +469,12 @@ async function fetchLastFmRecentTrack() {
             trackUrl: rawTrack?.url || '',
             artistUrl: buildLastFmUrl(artistName),
             albumUrl: buildLastFmUrl(artistName, albumName),
-            elapsed: isNowPlaying ? '' : formatElapsedFromUnix(rawTrack?.date?.uts)
+            elapsed: isNowPlaying ? '' : formatElapsedFromUnix(rawTrack?.date?.uts),
+            rawTimestamp: rawTrack?.date?.uts ? Number(rawTrack.date.uts) : null
         };
+        lastFmCache.data = result;
+        lastFmCache.ts = Date.now();
+        return result;
     } catch {
         return { unavailable: true };
     } finally {
@@ -480,12 +506,24 @@ function renderLastFmBlock(container, data) {
                 : 'text-term-yellow';
 
     if (loading || unavailable || empty) {
+        const retryBtn = (unavailable || empty)
+            ? `<button type="button" class="lastfm-retry text-[10px] mt-1 px-2 py-1 rounded border border-white/15 hover:border-term-green hover:text-term-green transition-colors" aria-label="Retry Last.fm">${escapeHtml(t('lastFmRetry'))}</button>`
+            : '';
         container.innerHTML = `
             <div>
                 <div class="text-[10px] uppercase tracking-wide text-term-purple mb-1">LAST.FM · ${escapeHtml(t('lastFmTitle'))}</div>
                 <div class="text-xs sm:text-sm ${statusClass}">${escapeHtml(statusText)}</div>
+                ${retryBtn}
             </div>
         `;
+        const btn = container.querySelector('.lastfm-retry');
+        if (btn) {
+            btn.addEventListener('click', () => {
+                lastFmCache.data = null;
+                lastFmCache.ts = 0;
+                hydrateLastFmBlock(container);
+            });
+        }
         return;
     }
 
@@ -523,11 +561,22 @@ async function hydrateLastFmBlock(container) {
 /* =========================================
  * 3. STATE MACHINE / PROXY
  * ========================================= */
+function loadStoredHistory() {
+    try {
+        const raw = localStorage.getItem('terminal_history');
+        if (!raw) return [];
+        const arr = JSON.parse(raw);
+        return Array.isArray(arr) ? arr.slice(-100) : [];
+    } catch { return []; }
+}
+
+const initialHistory = loadStoredHistory();
+
 const initialState = {
     theme: localStorage.getItem('terminal_theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dracula' : 'dracula-light'),
     language: localStorage.getItem('terminal_language') || (navigator.language.toLowerCase().startsWith('pt') ? 'pt-BR' : 'en'),
-    history: [],
-    historyIndex: -1,
+    history: initialHistory,
+    historyIndex: initialHistory.length,
     currentPath: '~'
 };
 
@@ -548,33 +597,29 @@ const state = new Proxy(initialState, {
     }
 });
 
-// Theme logic bindings
+// Theme logic bindings — propagates CSS vars at :root so backdrop-blur on quick-actions stays alive
 window.addEventListener('themeChanged', (e) => {
     const themeVals = themesConfig[e.detail];
-    if(!themeVals) return;
-    const root = document.querySelector('terminal-window');
-    const macWin = document.querySelector('.mac-window');
-    const winHeader = document.querySelector('.win-header');
-    const quickActions = document.querySelector('quick-actions');
+    if (!themeVals) return;
 
     for (const [key, val] of Object.entries(themeVals)) {
-        root.style.setProperty(`--term-${key}`, val);
+        document.documentElement.style.setProperty(`--term-${key}`, val);
     }
-    
-    // Propaga header e border para toda a janela
-    if (macWin) macWin.style.setProperty('--term-header', themeVals.header);
-    if (winHeader) {
-        winHeader.style.backgroundColor = themeVals.header;
-        winHeader.style.borderBottomColor = themeVals.border;
-    }
-    if (quickActions) {
-        quickActions.style.backgroundColor = themeVals.header;
-        quickActions.style.borderTopColor = themeVals.border;
-    }
-    
-    // Adapta o wrapper .mac-window bg para combinar com o tema
+
+    document.documentElement.setAttribute('data-theme-mode', isLightTheme(e.detail) ? 'light' : 'dark');
+
+    const macWin = document.querySelector('.mac-window');
     if (macWin) macWin.style.backgroundColor = themeVals.bg;
+
+    syncToggleState();
 });
+
+function syncToggleState() {
+    const modeBtn = document.getElementById('mode-toggle-btn');
+    const langBtn = document.getElementById('lang-toggle-btn');
+    if (modeBtn) modeBtn.setAttribute('aria-pressed', isLightTheme(state.theme) ? 'true' : 'false');
+    if (langBtn) langBtn.setAttribute('aria-pressed', state.language === 'en' ? 'true' : 'false');
+}
 
 // Initialize Theme immediately to prevent FOUC
 window.dispatchEvent(new CustomEvent('themeChanged', { detail: state.theme }));
@@ -588,19 +633,32 @@ const ghostElem = document.getElementById('ghost-text');
 const langToggleBtn = document.getElementById('lang-toggle-btn');
 const modeToggleBtn = document.getElementById('mode-toggle-btn');
 
-// Auto Scroll logic using Mutation Observer
+// Auto Scroll logic using Mutation Observer (childList only at root for perf)
+let scrollScheduled = false;
 const observer = new MutationObserver(() => {
-    outputElem.scrollTop = outputElem.scrollHeight;
+    if (scrollScheduled) return;
+    scrollScheduled = true;
+    requestAnimationFrame(() => {
+        outputElem.scrollTop = outputElem.scrollHeight;
+        scrollScheduled = false;
+    });
 });
-observer.observe(outputElem, { childList: true, subtree: true });
+observer.observe(outputElem, { childList: true });
 
-// Focus Hack
+// Focus Hack — preserve text selection and avoid keyboard popup on touch
 window.addEventListener('click', (e) => {
-    // Prevent if clicking a link or a button
-    if(!e.target.closest('a') && !e.target.closest('button')) {
-        inputElem.focus();
-    }
+    if (e.target.closest('a') || e.target.closest('button')) return;
+    if (e.target.closest('terminal-output')) return;
+    const sel = window.getSelection && window.getSelection();
+    if (sel && sel.toString().length > 0) return;
+    inputElem.focus();
 });
+
+// Renders the prompt prefix consistently across all callsites
+function renderPromptHTML(cmd = '') {
+    const safe = escapeHtml(cmd);
+    return `<span class="hidden sm:inline"><span class="text-term-green font-bold">thierry</span><span class="text-term-fg opacity-40">@</span><span class="text-term-blue">thierryrenematos.tec.br</span><span class="text-term-fg opacity-40">:</span><span class="text-term-purple font-bold">~</span></span><span class="text-term-fg text-term-green sm:text-term-fg font-bold sm:font-normal"> $</span>${safe ? ' ' + safe : ''}`;
+}
 
 function typeCharVisual(char) {
   inputElem.value += char;
@@ -617,7 +675,7 @@ function executeCommandVisual(cmdStr) {
 }
 
 // Quick Actions Builder
-const availableCommands = ['help', 'home', 'about', 'ls', 'projects', 'experience', 'skills', 'blog', 'contact', 'theme', 'shortcuts', 'clear'];
+const availableCommands = ['help', 'home', 'about', 'ls', 'projects', 'experience', 'contact', 'theme', 'mode', 'shortcuts', 'clear'];
 const quickActionCommands = availableCommands.filter(cmd => cmd !== 'ls');
 const commandAliases = {
     sobre: 'about',
@@ -673,6 +731,18 @@ function updateLayoutControlLabels() {
         modeToggleBtn.title = t('modeButtonTitle');
         modeToggleBtn.setAttribute('aria-label', t('modeButtonTitle'));
     }
+
+    syncToggleState();
+}
+
+function updateDocumentTitle(cmd) {
+    const baseSuffix = 'Thierry Rene Matos — Senior Web Dev';
+    if (!cmd || cmd === 'home' || cmd === 'neofetch' || cmd === 'clear') {
+        document.title = `${baseSuffix} | Terminal Portfolio`;
+        return;
+    }
+    const label = cmd.charAt(0).toUpperCase() + cmd.slice(1);
+    document.title = `${label} · ${baseSuffix}`;
 }
 
 if (langToggleBtn) langToggleBtn.addEventListener('click', toggleLanguage);
@@ -709,13 +779,7 @@ function trackCommand(cmd, routePath = '') {
     });
 }
 
-function getRouteForCommand(cmd, args = []) {
-    if (cmd === 'read' && args.length > 0) {
-        return `/#read/${encodeURIComponent(args[0])}`;
-    }
-    if (cmd === 'blog') {
-        return '/#blog';
-    }
+function getRouteForCommand(cmd) {
     return `/#${cmd}`;
 }
 
@@ -730,17 +794,6 @@ function safeDecode(value) {
 function parseRouteFromLocation() {
     const cleanPath = window.location.pathname.replace(/^\/+|\/+$/g, '');
     if (cleanPath && cleanPath !== 'index.html') {
-        const parts = cleanPath.split('/').map(safeDecode);
-        const first = parts[0].toLowerCase();
-
-        if (first === 'blog') {
-            if (parts.length === 1 || !parts[1]) {
-                return { cmd: 'blog', args: [], route: window.location.pathname };
-            }
-
-            return { cmd: 'read', args: [parts.slice(1).join('/')], route: window.location.pathname };
-        }
-
         return { invalid: true, route: window.location.pathname };
     }
 
@@ -789,15 +842,10 @@ function handleDeepLink({ excludedCommands = [] } = {}) {
 
     const normalized = resolveCommandName(parsed.cmd);
     const args = parsed.args || [];
-    const routeableCommands = [...availableCommands, 'read'];
     const isBlocked = excludedCommands.includes(normalized);
-    const isValid = routeableCommands.includes(normalized);
+    const isValid = availableCommands.includes(normalized);
 
     if (isValid && !isBlocked) {
-        if (normalized === 'read' && args.length === 0) {
-            renderUrlNotFound(parsed.route || '/');
-            return;
-        }
         const fullCmd = args.length > 0 ? `${normalized} ${args.join(' ')}` : normalized;
         setTimeout(() => { executeCommandVisual(fullCmd); }, 500);
         return;
@@ -821,7 +869,6 @@ function rerenderCurrentViewForLanguage() {
     const args = parsed.args || [];
     if (!commandsStrategy[normalized]) return;
 
-    state.blogInteractive = false;
     commandsStrategy.clear();
     commandsStrategy.homeSnapshot();
 
@@ -890,6 +937,7 @@ function getClosestMatch(target, candidates) {
 // Ghost Auto-complete logic
 inputElem.addEventListener('input', () => {
     const val = inputElem.value;
+    if (val !== tabCycleBase) resetTabCycle();
     if (!val) { ghostElem.textContent = ''; return; }
     const match = availableCommands.find(c => c.startsWith(val));
     if (match) {
@@ -899,26 +947,78 @@ inputElem.addEventListener('input', () => {
     }
 });
 
+// Reverse-search (Ctrl+R) state
+let reverseSearchActive = false;
+let reverseSearchQuery = '';
+let reverseSearchMatch = '';
+let reverseSearchBar = null;
+
+function openReverseSearch() {
+    if (reverseSearchActive) return;
+    reverseSearchActive = true;
+    reverseSearchQuery = '';
+    reverseSearchMatch = '';
+    reverseSearchBar = document.createElement('div');
+    reverseSearchBar.className = 'reverse-search-bar';
+    reverseSearchBar.textContent = '(reverse-i-search)`\': ';
+    outputElem.parentElement.insertBefore(reverseSearchBar, outputElem.nextSibling);
+}
+
+function updateReverseSearch() {
+    const q = reverseSearchQuery;
+    let match = '';
+    for (let i = state.history.length - 1; i >= 0; i--) {
+        if (state.history[i].includes(q)) { match = state.history[i]; break; }
+    }
+    reverseSearchMatch = match;
+    if (reverseSearchBar) {
+        reverseSearchBar.textContent = `(reverse-i-search)\`${q}\': ${match}`;
+    }
+    inputElem.value = match;
+    inputElem.dispatchEvent(new Event('input'));
+}
+
+function closeReverseSearch() {
+    reverseSearchActive = false;
+    reverseSearchQuery = '';
+    if (reverseSearchBar && reverseSearchBar.parentElement) {
+        reverseSearchBar.parentElement.removeChild(reverseSearchBar);
+    }
+    reverseSearchBar = null;
+}
+
+function commitReverseSearch() {
+    closeReverseSearch();
+    // Re-dispatch Enter so the existing handler picks it up next tick
+    setTimeout(() => {
+        const ev = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true });
+        inputElem.dispatchEvent(ev);
+    }, 0);
+}
+
+// Tab cycle bookkeeping
+let tabCycleMatches = [];
+let tabCycleIndex = 0;
+let tabCycleBase = '';
+
+function resetTabCycle() {
+    tabCycleMatches = [];
+    tabCycleIndex = 0;
+    tabCycleBase = '';
+}
+
 // History and Keys
 inputElem.addEventListener('keydown', (e) => {
-    // Blog Interactive Mode
-    if (state.blogInteractive) {
-        if (e.key === 'ArrowUp') {
+    // Reverse search interception
+    if (reverseSearchActive) {
+        if (e.key === 'Escape') { e.preventDefault(); closeReverseSearch(); inputElem.value = ''; inputElem.dispatchEvent(new Event('input')); return; }
+        if (e.key === 'Backspace') { e.preventDefault(); reverseSearchQuery = reverseSearchQuery.slice(0, -1); updateReverseSearch(); return; }
+        if (e.key === 'Enter') { /* handled below */ }
+        else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
             e.preventDefault();
-            if (state.blogIndex > 0) { state.blogIndex--; state.updateBlogList(); }
+            reverseSearchQuery += e.key;
+            updateReverseSearch();
             return;
-        } else if (e.key === 'ArrowDown') {
-            e.preventDefault();
-            if (state.blogIndex < blogPosts.length - 1) { state.blogIndex++; state.updateBlogList(); }
-            return;
-        } else if (e.key === 'Enter') {
-            e.preventDefault();
-            const postSlug = blogPosts[state.blogIndex].slug;
-            state.blogInteractive = false;
-            executeCommandVisual(`read ${postSlug}`);
-            return;
-        } else if (e.key !== 'Shift' && e.key !== 'Control' && e.key !== 'Meta' && e.key !== 'Alt') {
-            state.blogInteractive = false; // abort interactive mode
         }
     }
 
@@ -931,7 +1031,8 @@ inputElem.addEventListener('keydown', (e) => {
             return;
         } else if (k === 'c') { // Cancel line
             e.preventDefault();
-            writeLine(`<span class="hidden sm:inline"><span class="text-term-green font-bold">thierry</span><span class="text-term-fg opacity-40">@</span><span class="text-term-blue">thierryrenematos.tec.br</span><span class="text-term-fg opacity-40">:</span><span class="text-term-purple font-bold">~</span></span><span class="text-term-fg text-term-green sm:text-term-fg font-bold sm:font-normal"> $</span> ${inputElem.value}^C`);
+            if (reverseSearchActive) closeReverseSearch();
+            writeLine(`${renderPromptHTML(inputElem.value)}^C`);
             inputElem.value = '';
             inputElem.dispatchEvent(new Event('input'));
             return;
@@ -947,22 +1048,50 @@ inputElem.addEventListener('keydown', (e) => {
             inputElem.value = words.join(' ') + (words.length > 0 ? ' ' : '');
             inputElem.dispatchEvent(new Event('input'));
             return;
+        } else if (k === 'r') { // Reverse search
+            e.preventDefault();
+            openReverseSearch();
+            return;
         }
     }
 
     if (e.key === 'Tab') {
         e.preventDefault();
-        if (ghostElem.textContent && ghostElem.textContent.length > inputElem.value.length) {
-            inputElem.value = ghostElem.textContent;
+        const cur = inputElem.value;
+        if (tabCycleMatches.length === 0 || tabCycleBase !== cur) {
+            tabCycleBase = cur;
+            tabCycleMatches = availableCommands.filter(c => c.startsWith(cur));
+            tabCycleIndex = 0;
+            if (tabCycleMatches.length === 1) {
+                inputElem.value = tabCycleMatches[0];
+                ghostElem.textContent = '';
+                resetTabCycle();
+                return;
+            }
+            if (tabCycleMatches.length > 1) {
+                inputElem.value = tabCycleMatches[0];
+                tabCycleIndex = 0;
+                ghostElem.textContent = '';
+                return;
+            }
+        } else {
+            tabCycleIndex = (tabCycleIndex + 1) % tabCycleMatches.length;
+            inputElem.value = tabCycleMatches[tabCycleIndex];
             ghostElem.textContent = '';
+            return;
         }
     } else if (e.key === 'Enter') {
+        if (reverseSearchActive) { commitReverseSearch(); return; }
         const raw = inputElem.value.trim();
         inputElem.value = '';
         ghostElem.textContent = '';
         if (raw) {
-            writeLine(`<span class="hidden sm:inline"><span class="text-term-green font-bold">thierry</span><span class="text-term-fg opacity-40">@</span><span class="text-term-blue">thierryrenematos.tec.br</span><span class="text-term-fg opacity-40">:</span><span class="text-term-purple font-bold">~</span></span><span class="text-term-fg text-term-green sm:text-term-fg font-bold sm:font-normal"> $</span> ${raw}`);
-            state.history.push(raw);
+            writeLine(renderPromptHTML(raw));
+            if (state.history[state.history.length - 1] !== raw) {
+                state.history.push(raw);
+                state.history = state.history.slice(-100);
+                try { localStorage.setItem('terminal_history', JSON.stringify(state.history)); } catch {}
+            }
             state.historyIndex = state.history.length;
             processCommand(raw);
         }
@@ -990,7 +1119,9 @@ inputElem.addEventListener('keydown', (e) => {
  * 5. COMMAND PROCESSORS MODULES
  * ========================================= */
 
-// DOM Text Node Scrambler (for safe text animation over HTML tags)
+const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// DOM Text Node Scrambler (for safe text animation over HTML tags), driven by rAF
 function applyTextNodeAnimation(element, type) {
     const walk = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
     const nodes = [];
@@ -998,26 +1129,38 @@ function applyTextNodeAnimation(element, type) {
     while (n = walk.nextNode()) {
         if (n.nodeValue.trim().length > 0) {
             nodes.push({ node: n, original: n.nodeValue });
-            n.nodeValue = ' '; // hide initially
+            n.nodeValue = ' ';
         }
+    }
+
+    if (prefersReducedMotion()) {
+        nodes.forEach(item => { item.node.nodeValue = item.original; });
+        return;
     }
 
     if (type === 'typewriter') {
         let nIdx = 0;
         let charIdx = 0;
-        const iv = setInterval(() => {
-            if (nIdx >= nodes.length) { clearInterval(iv); return; }
-            let cur = nodes[nIdx];
+        let last = 0;
+        function step(ts) {
+            if (ts - last < 5) { requestAnimationFrame(step); return; }
+            last = ts;
+            if (nIdx >= nodes.length) return;
+            const cur = nodes[nIdx];
             cur.node.nodeValue = cur.original.substring(0, charIdx + 1);
             charIdx++;
             if (charIdx > cur.original.length) { nIdx++; charIdx = 0; }
-        }, 5);
+            requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
     } else if (type === 'matrix') {
         const chars = '01ABCDEFGHIJKLMNOPQRSTUVWXYZ@#$*';
         let iter = 0;
         const totalLen = nodes.reduce((a, c) => a + c.original.length, 0);
-
-        const iv = setInterval(() => {
+        let last = 0;
+        function step(ts) {
+            if (ts - last < 20) { requestAnimationFrame(step); return; }
+            last = ts;
             let globalRevealed = 0;
             nodes.forEach(item => {
                 let mapped = '';
@@ -1030,9 +1173,11 @@ function applyTextNodeAnimation(element, type) {
                 }
                 item.node.nodeValue = mapped;
             });
-            if (iter >= totalLen) clearInterval(iv);
+            if (iter >= totalLen) return;
             iter += 3;
-        }, 20);
+            requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
     }
 }
 
@@ -1051,10 +1196,9 @@ const commandsStrategy = {
             {c: 'ls', e: '📂', d: t('helpDesc.ls')},
             {c: 'projects', e: '💻', d: t('helpDesc.projects')},
             {c: 'experience', e: '👔', d: t('helpDesc.experience')},
-            {c: 'skills', e: '🛠️', d: t('helpDesc.skills')},
-            {c: 'blog', e: '📝', d: t('helpDesc.blog')},
             {c: 'contact', e: '📞', d: t('helpDesc.contact')},
             {c: 'theme', e: '🎨', d: t('helpDesc.theme')},
+            {c: 'mode', e: '🌓', d: t('helpDesc.mode')},
             {c: 'shortcuts', e: '⌨️', d: t('helpDesc.shortcuts')},
             {c: 'clear', e: '🗑️', d: t('helpDesc.clear')}
         ];
@@ -1062,7 +1206,7 @@ const commandsStrategy = {
             const elDiv = document.createElement('div');
             elDiv.className = 'flex items-center gap-2 cursor-pointer hover:underline';
             elDiv.onclick = () => executeCommandVisual(item.c);
-            elDiv.innerHTML = `<span class="text-term-yellow w-24">${item.c}</span> <span>${item.e}</span> <span class="text-term-fg opacity-70">${item.d}</span>`;
+            elDiv.innerHTML = `<span class="text-term-yellow w-24">${escapeHtml(item.c)}</span> <span aria-hidden="true">${item.e}</span> <span class="text-term-fg opacity-70">${escapeHtml(item.d)}</span>`;
             container.appendChild(elDiv);
         });
         body.appendChild(container);
@@ -1128,28 +1272,34 @@ const commandsStrategy = {
         // Efeito Fixo: Matrix
         const chosen = 'matrix';
 
-        if (chosen === 'typewriter') {
+        if (prefersReducedMotion()) {
+            logoEl.textContent = art;
+        } else if (chosen === 'typewriter') {
             logoEl.textContent = '';
             logoEl.classList.add('anim-pulse');
             let i = 0;
-            const iv = setInterval(() => {
-                if(i < art.length) { logoEl.textContent += art.charAt(i); i++; }
-                else clearInterval(iv);
-            }, 2); // typing speed
+            let last = 0;
+            (function tick(ts) {
+                if (ts - last < 2) { requestAnimationFrame(tick); return; }
+                last = ts;
+                if (i < art.length) { logoEl.textContent += art.charAt(i); i++; requestAnimationFrame(tick); }
+            })(0);
         } else if (chosen === 'matrix') {
             logoEl.textContent = art;
             logoEl.classList.add('anim-pulse');
             const chars = '01ABCDEFGHIJKLMNOPQRSTUVWXYZ@#$*';
             let iter = 0;
-            const iv = setInterval(() => {
+            let last = 0;
+            (function tick(ts) {
+                if (ts - last < 20) { requestAnimationFrame(tick); return; }
+                last = ts;
                 logoEl.textContent = art.split('').map((c, i) => {
                     if (c === ' ' || c === '\n') return c;
                     if (i < iter) return c;
                     return chars[Math.floor(Math.random() * chars.length)];
                 }).join('');
-                if (iter >= art.length) clearInterval(iv);
-                iter += 4;
-            }, 20); // matrix decode speed
+                if (iter < art.length) { iter += 4; requestAnimationFrame(tick); }
+            })(0);
         } else {
             logoEl.textContent = art;
             logoEl.classList.add(`anim-${chosen}`);
@@ -1159,7 +1309,7 @@ const commandsStrategy = {
         const addRow = (k, v, isLink) => {
             const vk = document.createElement('div'); vk.className = 'text-term-purple font-bold text-left sm:text-right pt-[2px]'; vk.textContent = k;
             const vv = document.createElement('div'); vv.className = 'text-term-fg opacity-80';
-            if(isLink) vv.innerHTML = `<a href="${v}" target="_blank" class="hover:underline text-term-blue">${v}</a>`;
+            if(isLink) vv.innerHTML = `<a href="${escapeHtml(v)}" target="_blank" rel="noopener noreferrer" class="hover:underline text-term-blue">${escapeHtml(v)}</a>`;
             else vv.innerHTML = v;
             hd.appendChild(vk); hd.appendChild(vv);
         };
@@ -1172,7 +1322,7 @@ const commandsStrategy = {
         addRow('User', userHTML);
         
         // Work: @instagram | website.com.br — em linha única com dois links
-        const workHTML = `<a href="${d.workInstagram}" target="_blank" class="hover:underline text-term-yellow font-bold">${d.work}</a><span class="text-term-fg opacity-30 mx-2">|</span><a href="${d.workUrl}" target="_blank" class="hover:underline text-term-blue">${d.workUrl.replace('https://', '')}</a>`;
+        const workHTML = `<a href="${escapeHtml(d.workInstagram)}" target="_blank" rel="noopener noreferrer" class="hover:underline text-term-yellow font-bold">${escapeHtml(d.work)}</a><span class="text-term-fg opacity-30 mx-2">|</span><a href="${escapeHtml(d.workUrl)}" target="_blank" rel="noopener noreferrer" class="hover:underline text-term-blue">${escapeHtml(d.workUrl.replace('https://', ''))}</a>`;
         addRow('Work', workHTML);
         
         // Mobile: Role completo. Desktop: título em destaque + sufixo.
@@ -1219,8 +1369,6 @@ const commandsStrategy = {
             cont.className = 'flex flex-wrap gap-4 my-2';
          const files = [
             {n:'projects/', t:'d', c:'projects'},
-            {n:'skills/', t:'d', c:'skills'},
-            {n:'blog/', t:'d', c:'blog'},
             {n:'experience.log', t:'f', c:'experience'},
             {n:'contact.txt', t:'f', c:'contact'}
          ];
@@ -1244,11 +1392,11 @@ const commandsStrategy = {
         experiences.forEach(e => {
             const item = document.createElement('div');
             item.className = 'border-l-2 border-term-purple pl-4 ml-2 space-y-2';
-            let html = `<div class="font-bold text-term-cyan">${e.role}</div>
-                        <div class="text-term-fg opacity-50 font-mono">${e.company} · ${e.period}</div>
-                        <p class="text-term-fg opacity-80 mt-1">${e.description}</p>
+            let html = `<div class="font-bold text-term-cyan">${escapeHtml(e.role)}</div>
+                        <div class="text-term-fg opacity-50 font-mono">${escapeHtml(e.company)} · ${escapeHtml(e.period)}</div>
+                        <p class="text-term-fg opacity-80 mt-1">${escapeHtml(e.description)}</p>
                         <ul class="text-term-fg opacity-70 mt-2 space-y-1">`;
-            e.achievements.forEach(a => { html += `<li>> ${a}</li>`; });
+            e.achievements.forEach(a => { html += `<li>> ${escapeHtml(a)}</li>`; });
             html += `</ul>`;
             item.innerHTML = html;
             cont.appendChild(item);
@@ -1270,107 +1418,19 @@ const commandsStrategy = {
 
             const stackLine = p.tags.join(' · ');
             const linkLine = p.link && p.link !== '#'
-                ? `<a href="${p.link}" target="_blank" class="text-term-blue hover:underline">${p.link.replace(/^https?:\/\//, '')}</a>`
+                ? `<a href="${escapeHtml(p.link)}" target="_blank" rel="noopener noreferrer" class="text-term-blue hover:underline">${escapeHtml(p.link.replace(/^https?:\/\//, ''))}</a>`
                 : '<span class="text-term-fg opacity-50">private / coming soon</span>';
 
             item.innerHTML = `
-                <div class="font-bold text-term-cyan">${p.title}</div>
-                <div class="text-term-fg opacity-50 font-mono">Stack · ${stackLine}</div>
-                <p class="text-term-fg opacity-80 mt-1">${p.description}</p>
+                <div class="font-bold text-term-cyan">${escapeHtml(p.title)}</div>
+                <div class="text-term-fg opacity-50 font-mono">Stack · ${escapeHtml(stackLine)}</div>
+                <p class="text-term-fg opacity-80 mt-1">${escapeHtml(p.description)}</p>
                 <div class="text-term-fg opacity-70 mt-2">> Link: ${linkLine}</div>
             `;
 
             cont.appendChild(item);
         });
 
-        body.appendChild(cont);
-        outputElem.appendChild(section);
-    },
-    'skills': async () => {
-        const { section, body } = createTerminalSection({
-            title: 'Skills',
-            meta: t('skillsMeta')
-        });
-        const cont = document.createElement('div');
-        cont.className = 'space-y-4';
-        const skillsToAnimate = [];
-        
-        skills.forEach(c => {
-            const block = document.createElement('div');
-            let h = `<div class="text-term-cyan font-bold mb-3 uppercase border-b border-white/10 pb-1 inline-block pr-6">${c.category}</div><div class="space-y-1">`;
-            c.skills.forEach(s => {
-                const skillId = `skill-${Math.random().toString(36).substr(2, 9)}`;
-                h += `<div class="w-full sm:w-1/2 mb-1">
-                        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-1">
-                            <span class="text-term-fg opacity-80 text-sm whitespace-nowrap overflow-hidden text-ellipsis pr-2">${s.name}</span>
-                            <span class="text-term-green font-mono text-[10px] sm:text-xs shrink-0" id="${skillId}">
-                                <span class="hidden sm:inline">[</span><span class="tracking-widest">░░░░░░░░░░</span><span class="hidden sm:inline">] 0/10</span>
-                                <span class="sm:hidden ml-1 text-xs">0/10</span>
-                            </span>
-                        </div>
-                      </div>`;
-                skillsToAnimate.push({ id: skillId, level: s.level });
-            });
-            h += `</div>`;
-            block.innerHTML = h;
-            cont.appendChild(block);
-        });
-        
-        body.appendChild(cont);
-        outputElem.appendChild(section);
-        
-        // Animate each skill bar progressively
-        for (let skillItem of skillsToAnimate) {
-            const elem = document.getElementById(skillItem.id);
-            if (!elem) continue;
-            
-            const targetLevel = skillItem.level;
-            for (let i = 0; i <= targetLevel; i++) {
-                const bar = '█'.repeat(i) + '░'.repeat(10 - i);
-                elem.innerHTML = `<span class="hidden sm:inline">[</span><span class="tracking-widest">${bar}</span><span class="hidden sm:inline">] ${i}/10</span><span class="sm:hidden ml-1 text-xs">${i}/10</span>`;
-                await sleep(25);
-            }
-        }
-    },
-    'blog': () => {
-        const { section, body } = createTerminalSection({
-            title: t('blogTitle'),
-            meta: t('blogMeta'),
-            hint: t('blogHint')
-        });
-        const cont = document.createElement('div');
-        cont.className = 'space-y-2';
-        
-        state.blogInteractive = true;
-        state.blogIndex = 0;
-
-        const renderList = () => {
-            cont.innerHTML = '';
-            blogPosts.forEach((p, idx) => {
-                 const row = document.createElement('div');
-                 const dateReal = new Date(p.date);
-                 const isSel = idx === state.blogIndex;
-                 
-                 row.className = `cursor-pointer transition-colors p-2 rounded flex items-center gap-4 border ${isSel ? 'bg-white/10 border-white/20 scale-[1.01]' : 'bg-transparent border-transparent hover:bg-white/5'} transform`;
-                 
-                 row.innerHTML = `<span class="${isSel ? 'text-term-green' : 'text-term-yellow'} w-8 shrink-0 font-bold">${isSel ? '▶' : '#'} ${p.id}</span>
-                                  <span class="text-term-comment text-xs shrink-0 w-24">${formatDisplayDate(dateReal)}</span>
-                                  <span class="${isSel ? 'text-term-green font-bold' : 'text-term-fg opacity-80'} truncate">${p.title}</span>`;
-                 
-                 row.onclick = () => {
-                     state.blogInteractive = false;
-                     executeCommandVisual(`read ${p.slug}`);
-                 };
-                 cont.appendChild(row);
-            });
-            const hint = document.createElement('div');
-            hint.className = 'text-term-comment text-xs italic mt-2 ml-2 animate-pulse';
-            hint.textContent = `↓ ${t('blogNavHint')}`;
-            cont.appendChild(hint);
-        };
-        
-        state.updateBlogList = renderList;
-        renderList();
         body.appendChild(cont);
         outputElem.appendChild(section);
     },
@@ -1405,45 +1465,12 @@ const commandsStrategy = {
         body.appendChild(cont);
         outputElem.appendChild(section);
     },
-    'read': (args) => {
-        if(!args || args.length === 0) {
-            writeLine(t('readArgError'), 'text-term-red font-bold');
-            return;
-        }
-        const slug = args[0];
-        const post = blogPosts.find(p => p.slug === slug);
-        if(!post) {
-            writeLine(t('readNotFound', { slug: args[0] }), 'text-term-red font-bold');
-            return;
-        }
-        const { section, body } = createTerminalSection({
-            title: post.title,
-            meta: `<span>${formatDisplayDate(post.date)}</span><span class="opacity-40">|</span><span>${t('readAuthor')}: Thierry Rene Matos</span>`,
-            hint: t('readHint')
-        });
-
-        const tagsEl = document.createElement('div');
-        tagsEl.className = 'flex gap-2 mb-3 text-xs';
-        tagsEl.innerHTML = post.tags.map(tag => `<span class="bg-term-purple/20 text-term-purple px-2 py-0.5 rounded">${tag}</span>`).join('');
-
-        const contentEl = document.createElement('div');
-        contentEl.className = 'leading-relaxed text-term-fg opacity-80 text-sm sm:text-base mb-4';
-        contentEl.innerHTML = post.content;
-
-        const backBtn = document.createElement('button');
-        backBtn.className = 'px-4 py-2 bg-white/10 hover:bg-white/20 rounded font-mono text-xs transition-colors text-term-fg';
-        backBtn.textContent = t('readBack');
-        backBtn.onclick = () => executeCommandVisual('blog');
-
-        body.appendChild(tagsEl);
-        body.appendChild(contentEl);
-        body.appendChild(backBtn);
-        outputElem.appendChild(section);
-    },
     'theme': (args) => {
         const families = getThemeFamilies();
+        const activeFamily = getThemeFamily(state.theme);
         if(!args || args.length === 0) {
-            writeLine(t('themeSupported', { themes: families.join(', ') }), 'text-term-fg opacity-70');
+            const annotated = families.map(f => f === activeFamily ? `> ${f} [active]` : `  ${f}`).join('\n');
+            writeLine(`<pre class="whitespace-pre-wrap font-mono text-term-fg opacity-80 text-sm">${escapeHtml(annotated)}</pre>`, 'text-term-fg opacity-70');
             return;
         }
 
@@ -1459,6 +1486,26 @@ const commandsStrategy = {
             const nextTheme = isLightTheme(state.theme) ? `${themeFamily}-light` : themeFamily;
             state.theme = themesConfig[nextTheme] ? nextTheme : themeFamily;
             writeLine(t('themeActivated', { theme: themeFamily }), 'text-term-green');
+        }
+    },
+    'mode': (args) => {
+        if (!args || args.length === 0) {
+            const cur = isLightTheme(state.theme) ? 'light' : 'dark';
+            writeLine(t('modeCurrent', { mode: cur }), 'text-term-fg opacity-70');
+            return;
+        }
+        const wanted = args[0].toLowerCase();
+        if (wanted !== 'dark' && wanted !== 'light') {
+            writeLine(t('modeInvalid'), 'text-term-red');
+            return;
+        }
+        const family = getThemeFamily(state.theme);
+        const target = wanted === 'light' ? `${family}-light` : family;
+        if (themesConfig[target]) {
+            state.theme = target;
+            writeLine(t('modeActivated', { mode: wanted }), 'text-term-green');
+        } else {
+            writeLine(t('modeInvalid'), 'text-term-red');
         }
     }
 };
@@ -1476,8 +1523,8 @@ function processCommand(raw) {
 
     if(commandsStrategy[normalizedCmd]) {
         // Track analytics and update URL for meaningful content commands
-        const trackable = ['blog', 'projects', 'skills', 'experience', 'contact', 'help', 'home', 'about', 'shortcuts', 'theme'];
-        const trackableWithArgs = ['read'];
+        const trackable = ['projects', 'experience', 'contact', 'help', 'home', 'about', 'shortcuts', 'theme', 'mode'];
+        const trackableWithArgs = [];
         const routePath = getRouteForCommand(normalizedCmd, args);
         if (trackable.includes(normalizedCmd) || trackableWithArgs.includes(normalizedCmd)) {
             const currentRoute = `${window.location.pathname}${window.location.hash}`;
@@ -1485,8 +1532,9 @@ function processCommand(raw) {
                 history.pushState(null, null, routePath);
             }
             trackCommand(normalizedCmd, routePath);
+            updateDocumentTitle(normalizedCmd);
         }
-        
+
         commandsStrategy[normalizedCmd](args);
     } else {
         const suggestion = getClosestMatch(normalizedCmd, availableCommands);
@@ -1503,15 +1551,26 @@ function processCommand(raw) {
  * ========================================= */
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Allow cancellation of boot animation
+// Allow cancellation of boot animation — both listeners disarm together
 const bootControl = { canceled: false };
-const abortBoot = () => { bootControl.canceled = true; };
-window.addEventListener('keydown', abortBoot, {once:true});
-window.addEventListener('click', abortBoot, {once:true});
+const abortBoot = () => {
+    bootControl.canceled = true;
+    window.removeEventListener('keydown', abortBoot);
+    window.removeEventListener('click', abortBoot);
+};
+window.addEventListener('keydown', abortBoot);
+window.addEventListener('click', abortBoot);
 
 async function startBootSequence({ replayDeepLink = true } = {}) {
-    state.blogInteractive = false;
-    state.blogIndex = 0;
+    outputElem.setAttribute('aria-live', 'off');
+
+    let skipHint = null;
+    if (!prefersReducedMotion()) {
+        skipHint = document.createElement('div');
+        skipHint.className = 'boot-skip-hint';
+        skipHint.textContent = t('bootSkipHint');
+        document.body.appendChild(skipHint);
+    }
 
     const lines = [
         "Initializing BIOS Configuration... [ OK ]",
@@ -1560,10 +1619,44 @@ async function startBootSequence({ replayDeepLink = true } = {}) {
     // Remove cancel listeners so real clicks work
     window.removeEventListener('keydown', abortBoot);
     window.removeEventListener('click', abortBoot);
-    
+
+    if (skipHint && skipHint.parentElement) skipHint.parentElement.removeChild(skipHint);
+    outputElem.setAttribute('aria-live', 'polite');
+
     // Trigger focus
     inputElem.focus();
 }
 
 // Launch
 window.onload = startBootSequence;
+
+// Particles resize coordination (cross-breakpoint awareness)
+let lastIsDesktop = window.innerWidth >= 640;
+window.addEventListener('resize', () => {
+    const nowDesktop = window.innerWidth >= 640;
+    if (nowDesktop === lastIsDesktop) return;
+    lastIsDesktop = nowDesktop;
+    const particlesEl = document.getElementById('particles-js');
+    if (!particlesEl) return;
+    if (!nowDesktop) {
+        particlesEl.innerHTML = '';
+    } else if (typeof particlesJS === 'function' && !prefersReducedMotion()) {
+        particlesEl.innerHTML = '';
+        particlesJS('particles-js', {
+            particles: {
+                number: { value: 40, density: { enable: true, value_area: 900 } },
+                color: { value: ['#50fa7b', '#8be9fd', '#bd93f9', '#f1fa8c', '#ff79c6', '#ffb86c', '#ff5555'] },
+                opacity: { value: 0.35, random: true },
+                size: { value: 3, random: true },
+                line_linked: { enable: true, distance: 140, color: '#ffffff', opacity: 0.12, width: 1 },
+                move: { enable: true, speed: 1.2 }
+            },
+            interactivity: {
+                detect_on: 'canvas',
+                events: { onhover: { enable: true, mode: 'grab' }, onclick: { enable: true, mode: 'push' } },
+                modes: { grab: { distance: 140, line_linked: { opacity: 0.35 } } }
+            },
+            retina_detect: true
+        });
+    }
+});

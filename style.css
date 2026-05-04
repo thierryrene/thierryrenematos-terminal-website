@@ -106,4 +106,119 @@ terminal-window, .mac-window, .win-header, quick-actions {
   outline-offset: 1px;
 }
 
+/* Mobile tap-target sizing for quick actions */
+@media (max-width: 640px) {
+  quick-actions button,
+  quick-actions a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
 
+/* Output cursor hint: reinforces selectable content */
+terminal-output { cursor: text; }
+
+/* Boot skip hint */
+.boot-skip-hint {
+  position: absolute;
+  right: 12px;
+  bottom: 56px;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  font-size: 10px;
+  color: var(--term-fg);
+  opacity: 0.45;
+  pointer-events: none;
+  z-index: 25;
+}
+
+/* Reverse-search overlay */
+.reverse-search-bar {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  font-size: 12px;
+  color: var(--term-yellow);
+  padding: 4px 8px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.15);
+  background: rgba(0, 0, 0, 0.25);
+}
+
+/* =========================================
+ * Light theme overrides
+ * Tailwind utilities like bg-white/10 and border-white/* are designed for dark
+ * backgrounds. Below we re-tone the surfaces, borders, shadows and outer body
+ * gradient so the light themes keep enough contrast and depth.
+ * ========================================= */
+
+:root[data-theme-mode="light"] body {
+  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+}
+
+:root[data-theme-mode="light"] .mac-window {
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(15, 23, 42, 0.08);
+}
+
+/* Bottom toolbar (quick-actions) — flip from dark wash to soft light wash */
+:root[data-theme-mode="light"] quick-actions.bg-black\/40 {
+  background-color: rgba(15, 23, 42, 0.04) !important;
+}
+
+/* Surfaces (cards / inline emphasis) — invert white-overlay tokens */
+:root[data-theme-mode="light"] .bg-white\/5 { background-color: rgba(15, 23, 42, 0.04) !important; }
+:root[data-theme-mode="light"] .bg-white\/10 { background-color: rgba(15, 23, 42, 0.06) !important; }
+:root[data-theme-mode="light"] .bg-white\/20 { background-color: rgba(15, 23, 42, 0.10) !important; }
+:root[data-theme-mode="light"] .bg-black\/20 { background-color: rgba(15, 23, 42, 0.05) !important; }
+:root[data-theme-mode="light"] .hover\:bg-white\/5:hover { background-color: rgba(15, 23, 42, 0.05) !important; }
+:root[data-theme-mode="light"] .hover\:bg-white\/10:hover { background-color: rgba(15, 23, 42, 0.08) !important; }
+:root[data-theme-mode="light"] .hover\:bg-white\/20:hover { background-color: rgba(15, 23, 42, 0.12) !important; }
+
+/* Borders */
+:root[data-theme-mode="light"] .border-white\/5 { border-color: rgba(15, 23, 42, 0.08) !important; }
+:root[data-theme-mode="light"] .border-white\/10 { border-color: rgba(15, 23, 42, 0.10) !important; }
+:root[data-theme-mode="light"] .border-white\/15 { border-color: rgba(15, 23, 42, 0.14) !important; }
+:root[data-theme-mode="light"] .border-white\/18 { border-color: rgba(15, 23, 42, 0.16) !important; }
+
+/* Text contrast: dark fg with low opacity becomes hard to read on light bg.
+   Bump up minimum opacity so secondary text stays legible (WCAG AA-friendly). */
+:root[data-theme-mode="light"] .opacity-30 { opacity: 0.55 !important; }
+:root[data-theme-mode="light"] .opacity-40 { opacity: 0.6 !important; }
+:root[data-theme-mode="light"] .opacity-50 { opacity: 0.65 !important; }
+:root[data-theme-mode="light"] .opacity-60 { opacity: 0.7 !important; }
+:root[data-theme-mode="light"] .opacity-70 { opacity: 0.78 !important; }
+
+/* Control button (header right) — soften surface for light */
+:root[data-theme-mode="light"] .control-btn {
+  background: rgba(15, 23, 42, 0.05);
+  border-color: rgba(15, 23, 42, 0.18);
+}
+:root[data-theme-mode="light"] .control-btn:hover {
+  background: rgba(15, 23, 42, 0.10);
+}
+
+/* Custom scrollbar visibility on light bg */
+:root[data-theme-mode="light"] terminal-output::-webkit-scrollbar-thumb {
+  background: var(--term-purple);
+  opacity: 0.6;
+}
+
+/* Boot skip hint legibility */
+:root[data-theme-mode="light"] .boot-skip-hint { opacity: 0.6; }
+
+/* Reverse-search bar surface */
+:root[data-theme-mode="light"] .reverse-search-bar {
+  background: rgba(15, 23, 42, 0.05);
+  border-top-color: rgba(15, 23, 42, 0.12);
+}
+
+/* prefers-reduced-motion: kill non-essential animations */
+@media (prefers-reduced-motion: reduce) {
+  .slide-in,
+  .anim-pulse,
+  .anim-wipe,
+  .anim-fade,
+  .anim-glitch {
+    animation: none !important;
+  }
+  terminal-window, .mac-window, .win-header, quick-actions {
+    transition: none !important;
+  }
+  #particles-js { display: none !important; }
+}
