@@ -171,10 +171,8 @@ const blogPosts = [
  * 2. THEMES CONFIGURATION
  * ========================================= */
 const themesConfig = {
-  'dracula':       { bg: '#282a36', fg: '#f8f8f2', green: '#50fa7b', blue: '#8be9fd', purple: '#bd93f9', yellow: '#f1fa8c',   header: '#1e2030', border: 'rgba(255,255,255,0.07)' },
-  'dracula-light': { bg: '#f8f8f2', fg: '#282a36', green: '#1a9a3b', blue: '#067ea2', purple: '#6b3fa0', yellow: '#b89209',   header: '#e2e8f0', border: 'rgba(0,0,0,0.10)' },
-  'monokai':       { bg: '#272822', fg: '#f8f8f2', green: '#a6e22e', blue: '#66d9ef', purple: '#ae81ff', yellow: '#e6db74',   header: '#1c1c18', border: 'rgba(255,255,255,0.07)' },
-  'monokai-light': { bg: '#fafafa', fg: '#272822', green: '#7db90b', blue: '#0594ab', purple: '#8e4aff', yellow: '#d2b610',   header: '#e8e8e4', border: 'rgba(0,0,0,0.10)' }
+  'dracula': { bg: '#282a36', fg: '#f8f8f2', green: '#50fa7b', blue: '#8be9fd', purple: '#bd93f9', yellow: '#f1fa8c', header: '#1e2030', border: 'rgba(255,255,255,0.07)' },
+  'monokai': { bg: '#272822', fg: '#f8f8f2', green: '#a6e22e', blue: '#66d9ef', purple: '#ae81ff', yellow: '#e6db74', header: '#1c1c18', border: 'rgba(255,255,255,0.07)' }
 };
 
 const i18n = {
@@ -194,7 +192,6 @@ const i18n = {
             blog: 'Artigos tecnicos',
             contact: 'Minhas redes e conexoes',
             theme: 'Muda cor (dracula, monokai...)',
-            mode: 'Alterna dark/light (mode dark|light)',
             shortcuts: 'Teclas de atalho',
             clear: 'Limpa o console'
         },
@@ -223,9 +220,6 @@ const i18n = {
         lastFmArtistLink: 'Artista no Last.fm',
         lastFmAlbumLink: 'Album no Last.fm',
         lastFmRetry: 'Tentar novamente',
-        modeCurrent: 'Modo atual: {mode}. Use mode dark ou mode light.',
-        modeInvalid: 'Modo invalido. Use mode dark ou mode light.',
-        modeActivated: 'Modo {mode} ativado.',
         lsTitle: 'Directory Listing',
         lsMeta: 'Itens navegaveis do portfolio no contexto atual.',
         experienceTitle: 'Experiencia',
@@ -258,9 +252,6 @@ const i18n = {
         bootSkipHint: 'pressione qualquer tecla para pular',
         langButton: 'PT-BR',
         langButtonTitle: 'Alternar idioma',
-        modeDark: 'Dark',
-        modeLight: 'Light',
-        modeButtonTitle: 'Alternar tema claro/escuro'
     },
     en: {
         inputTitle: 'Command',
@@ -278,7 +269,6 @@ const i18n = {
             blog: 'Technical articles',
             contact: 'My networks and connections',
             theme: 'Change colors (dracula, monokai...)',
-            mode: 'Toggle dark/light (mode dark|light)',
             shortcuts: 'Keyboard shortcuts',
             clear: 'Clear console'
         },
@@ -307,9 +297,6 @@ const i18n = {
         lastFmArtistLink: 'Artist on Last.fm',
         lastFmAlbumLink: 'Album on Last.fm',
         lastFmRetry: 'Retry',
-        modeCurrent: 'Current mode: {mode}. Use mode dark or mode light.',
-        modeInvalid: 'Invalid mode. Use mode dark or mode light.',
-        modeActivated: 'Mode {mode} activated.',
         lsTitle: 'Directory Listing',
         lsMeta: 'Navigable portfolio items in current context.',
         experienceTitle: 'Experience',
@@ -342,9 +329,6 @@ const i18n = {
         bootSkipHint: 'press any key to skip',
         langButton: 'EN',
         langButtonTitle: 'Switch language',
-        modeDark: 'Dark',
-        modeLight: 'Light',
-        modeButtonTitle: 'Toggle dark/light mode'
     }
 };
 
@@ -360,16 +344,8 @@ function t(key, vars = {}) {
     return raw.replace(/\{(\w+)\}/g, (_, name) => (vars[name] !== undefined ? vars[name] : `{${name}}`));
 }
 
-function isLightTheme(themeName) {
-    return themeName.endsWith('-light');
-}
-
-function getThemeFamily(themeName) {
-    return themeName.replace(/-light$/, '');
-}
-
 function getThemeFamilies() {
-    return [...new Set(Object.keys(themesConfig).map(getThemeFamily))];
+    return Object.keys(themesConfig);
 }
 
 function getDateLocale() {
@@ -573,7 +549,7 @@ function loadStoredHistory() {
 const initialHistory = loadStoredHistory();
 
 const initialState = {
-    theme: localStorage.getItem('terminal_theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dracula' : 'dracula-light'),
+    theme: localStorage.getItem('terminal_theme') || 'dracula',
     language: localStorage.getItem('terminal_language') || (navigator.language.toLowerCase().startsWith('pt') ? 'pt-BR' : 'en'),
     history: initialHistory,
     historyIndex: initialHistory.length,
@@ -606,8 +582,6 @@ window.addEventListener('themeChanged', (e) => {
         document.documentElement.style.setProperty(`--term-${key}`, val);
     }
 
-    document.documentElement.setAttribute('data-theme-mode', isLightTheme(e.detail) ? 'light' : 'dark');
-
     const macWin = document.querySelector('.mac-window');
     if (macWin) macWin.style.backgroundColor = themeVals.bg;
 
@@ -615,9 +589,7 @@ window.addEventListener('themeChanged', (e) => {
 });
 
 function syncToggleState() {
-    const modeBtn = document.getElementById('mode-toggle-btn');
     const langBtn = document.getElementById('lang-toggle-btn');
-    if (modeBtn) modeBtn.setAttribute('aria-pressed', isLightTheme(state.theme) ? 'true' : 'false');
     if (langBtn) langBtn.setAttribute('aria-pressed', state.language === 'en' ? 'true' : 'false');
 }
 
@@ -631,7 +603,6 @@ const outputElem = document.getElementById('output');
 const inputElem = document.getElementById('cmd-input');
 const ghostElem = document.getElementById('ghost-text');
 const langToggleBtn = document.getElementById('lang-toggle-btn');
-const modeToggleBtn = document.getElementById('mode-toggle-btn');
 
 // Auto Scroll logic using Mutation Observer (childList only at root for perf)
 let scrollScheduled = false;
@@ -675,7 +646,7 @@ function executeCommandVisual(cmdStr) {
 }
 
 // Quick Actions Builder
-const availableCommands = ['help', 'home', 'about', 'ls', 'projects', 'experience', 'contact', 'theme', 'mode', 'shortcuts', 'clear'];
+const availableCommands = ['help', 'home', 'about', 'ls', 'projects', 'experience', 'contact', 'theme', 'shortcuts', 'clear'];
 const quickActionCommands = availableCommands.filter(cmd => cmd !== 'ls');
 const commandAliases = {
     sobre: 'about',
@@ -704,17 +675,6 @@ function toggleLanguage() {
     state.language = state.language === 'pt-BR' ? 'en' : 'pt-BR';
 }
 
-function toggleThemeMode() {
-    const family = getThemeFamily(state.theme);
-    const targetTheme = isLightTheme(state.theme) ? family : `${family}-light`;
-    if (themesConfig[targetTheme]) {
-        state.theme = targetTheme;
-        return;
-    }
-
-    state.theme = isLightTheme(state.theme) ? 'dracula' : 'dracula-light';
-}
-
 function updateLayoutControlLabels() {
     document.documentElement.lang = state.language;
     if (inputElem) inputElem.title = t('inputTitle');
@@ -723,13 +683,6 @@ function updateLayoutControlLabels() {
         langToggleBtn.textContent = t('langButton');
         langToggleBtn.title = t('langButtonTitle');
         langToggleBtn.setAttribute('aria-label', t('langButtonTitle'));
-    }
-
-    if (modeToggleBtn) {
-        const modeLabel = isLightTheme(state.theme) ? t('modeLight') : t('modeDark');
-        modeToggleBtn.textContent = modeLabel;
-        modeToggleBtn.title = t('modeButtonTitle');
-        modeToggleBtn.setAttribute('aria-label', t('modeButtonTitle'));
     }
 
     syncToggleState();
@@ -746,7 +699,6 @@ function updateDocumentTitle(cmd) {
 }
 
 if (langToggleBtn) langToggleBtn.addEventListener('click', toggleLanguage);
-if (modeToggleBtn) modeToggleBtn.addEventListener('click', toggleThemeMode);
 
 window.addEventListener('languageChanged', () => {
     renderQuickActions();
@@ -1198,7 +1150,6 @@ const commandsStrategy = {
             {c: 'experience', e: '👔', d: t('helpDesc.experience')},
             {c: 'contact', e: '📞', d: t('helpDesc.contact')},
             {c: 'theme', e: '🎨', d: t('helpDesc.theme')},
-            {c: 'mode', e: '🌓', d: t('helpDesc.mode')},
             {c: 'shortcuts', e: '⌨️', d: t('helpDesc.shortcuts')},
             {c: 'clear', e: '🗑️', d: t('helpDesc.clear')}
         ];
@@ -1467,7 +1418,7 @@ const commandsStrategy = {
     },
     'theme': (args) => {
         const families = getThemeFamilies();
-        const activeFamily = getThemeFamily(state.theme);
+        const activeFamily = state.theme;
         if(!args || args.length === 0) {
             const annotated = families.map(f => f === activeFamily ? `> ${f} [active]` : `  ${f}`).join('\n');
             writeLine(`<pre class="whitespace-pre-wrap font-mono text-term-fg opacity-80 text-sm">${escapeHtml(annotated)}</pre>`, 'text-term-fg opacity-70');
@@ -1475,7 +1426,7 @@ const commandsStrategy = {
         }
 
         const requested = args[0].toLowerCase();
-        const themeFamily = getThemeFamily(requested);
+        const themeFamily = requested;
 
         if(!families.includes(themeFamily)) {
             const best = getClosestMatch(themeFamily, families);
@@ -1483,29 +1434,8 @@ const commandsStrategy = {
             if(best) out += t('didYouMean', { suggestion: best });
             writeLine(out, 'text-term-red');
         } else {
-            const nextTheme = isLightTheme(state.theme) ? `${themeFamily}-light` : themeFamily;
-            state.theme = themesConfig[nextTheme] ? nextTheme : themeFamily;
+            state.theme = themeFamily;
             writeLine(t('themeActivated', { theme: themeFamily }), 'text-term-green');
-        }
-    },
-    'mode': (args) => {
-        if (!args || args.length === 0) {
-            const cur = isLightTheme(state.theme) ? 'light' : 'dark';
-            writeLine(t('modeCurrent', { mode: cur }), 'text-term-fg opacity-70');
-            return;
-        }
-        const wanted = args[0].toLowerCase();
-        if (wanted !== 'dark' && wanted !== 'light') {
-            writeLine(t('modeInvalid'), 'text-term-red');
-            return;
-        }
-        const family = getThemeFamily(state.theme);
-        const target = wanted === 'light' ? `${family}-light` : family;
-        if (themesConfig[target]) {
-            state.theme = target;
-            writeLine(t('modeActivated', { mode: wanted }), 'text-term-green');
-        } else {
-            writeLine(t('modeInvalid'), 'text-term-red');
         }
     }
 };
@@ -1523,7 +1453,7 @@ function processCommand(raw) {
 
     if(commandsStrategy[normalizedCmd]) {
         // Track analytics and update URL for meaningful content commands
-        const trackable = ['projects', 'experience', 'contact', 'help', 'home', 'about', 'shortcuts', 'theme', 'mode'];
+        const trackable = ['projects', 'experience', 'contact', 'help', 'home', 'about', 'shortcuts', 'theme'];
         const trackableWithArgs = [];
         const routePath = getRouteForCommand(normalizedCmd, args);
         if (trackable.includes(normalizedCmd) || trackableWithArgs.includes(normalizedCmd)) {

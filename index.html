@@ -52,19 +52,10 @@
   <script>
     (function () {
       try {
-        var t = localStorage.getItem('terminal_theme');
-        var darkMatch = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        if (!t) t = darkMatch ? 'dracula' : 'dracula-light';
-        var bgs = {
-          'dracula': '#282a36', 'dracula-light': '#f8f8f2',
-          'monokai': '#272822', 'monokai-light': '#fafafa'
-        };
-        var bg = bgs[t] || '#282a36';
-        var isLight = t.endsWith('-light');
-        var fg = isLight ? '#282a36' : '#f8f8f2';
-        document.documentElement.style.setProperty('--term-bg', bg);
-        document.documentElement.style.setProperty('--term-fg', fg);
-        document.documentElement.setAttribute('data-theme-mode', isLight ? 'light' : 'dark');
+        var t = localStorage.getItem('terminal_theme') || 'dracula';
+        var bgs = { 'dracula': '#282a36', 'monokai': '#272822' };
+        document.documentElement.style.setProperty('--term-bg', bgs[t] || '#282a36');
+        document.documentElement.style.setProperty('--term-fg', '#f8f8f2');
       } catch (e) { /* ignore */ }
     })();
   </script>
@@ -144,7 +135,6 @@
       <div class="flex-1 text-center font-mono text-xs text-term-fg opacity-40">thierry@thierryrenematos.tec.br — zsh</div>
       <div id="layout-controls" class="absolute right-4 flex items-center gap-2">
         <button id="lang-toggle-btn" type="button" class="control-btn" aria-label="Switch language" aria-pressed="false" title="Switch language">PT-BR</button>
-        <button id="mode-toggle-btn" type="button" class="control-btn" aria-label="Toggle dark or light theme" aria-pressed="false" title="Toggle dark or light theme">Dark</button>
       </div>
     </div>
 
